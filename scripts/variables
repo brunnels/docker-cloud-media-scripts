@@ -3,31 +3,29 @@
 _puid=$(printenv PUID)
 _pgid=$(printenv PGID)
 
-cloud_encrypt_dir="/cloud-encrypt"
 cloud_decrypt_dir="/cloud-decrypt"
+
+read_decrypt_dir="/read-decrypt"
 
 local_decrypt_dir="/local-decrypt"
 local_media_dir="/local-media"
-
-local_work_dir="/local-workdir"
+local_media_edit_dir="/local-media-edit"
 
 rclone_config="--config=/config/rclone.conf"
 rclone_exclude_file="/config/exclude.txt"
-rclone_options="${rclone_config} --buffer-size $(printenv BUFFER_SIZE) --checkers $(printenv CHECKERS)"
-#rclone_mount_options="${rclone_options} --allow-non-empty --allow-other --max-read-ahead $(printenv MAX_READ_AHEAD) --uid ${_puid:-911} --gid ${_pgid:-911}"
-rclone_mirror_options="${rclone_config} --exclude-from=${rclone_exclude_file} --transfers $(printenv MIRROR_TRANSFERS) --drive-chunk-size $(printenv MIRROR_CHUNK_SIZE) --bwlimit $(printenv MIRROR_BWLIMIT) --tpslimit $(printenv MIRROR_TPS_LIMIT) --tpslimit-burst $(printenv MIRROR_TPS_LIMIT_BURST) --fast-list"
-rclone_copy_options="${rclone_options} --drive-chunk-size $(printenv COPY_CHUNK_SIZE) --bwlimit $(printenv COPY_BWLIMIT) --tpslimit $(printenv COPY_TPS_LIMIT) --tpslimit-burst $(printenv COPY_TPS_LIMIT_BURST) --fast-list"
-rclone_move_options="${rclone_options} --drive-chunk-size $(printenv MOVE_CHUNK_SIZE) --bwlimit $(printenv MOVE_BWLIMIT) --tpslimit $(printenv MOVE_TPS_LIMIT) --tpslimit-burst $(printenv MOVE_TPS_LIMIT_BURST) --fast-list"
-rclone_mount_options="${rclone_options} --allow-non-empty --allow-other --uid ${_puid:-911} --gid ${_pgid:-911} --umask $(printenv RCLONE_MOUNT_UMASK)"
+rclone_options="${rclone_config} --buffer-size $(printenv COPY_BUFFER_SIZE) --checkers $(printenv COPY_CHECKERS)"
+rclone_mirror_options="${rclone_config} --exclude-from=${rclone_exclude_file} --transfers $(printenv MIRROR_TRANSFERS) --bwlimit $(printenv MIRROR_BWLIMIT) --tpslimit $(printenv MIRROR_TPS_LIMIT) --tpslimit-burst $(printenv MIRROR_TPS_LIMIT_BURST)"
+rclone_mount_options="${rclone_options} --allow-non-empty --allow-other --uid ${_puid:-911} --gid ${_pgid:-911} --umask $(printenv RCLONE_MASK)"
 
-plexdrive_temp_dir="/chunks"
-plexdrive_cache_bolt="/chunks/cache.bolt"
-#plexdrive_options="mount --config=/config --cache-file=${plexdrive_cache_bolt} --chunk-size=$(printenv CHUNK_SIZE) --chunk-check-threads=$(printenv CHUNK_CHECK_THREADS) --chunk-load-ahead=$(printenv CHUNK_LOAD_AHEAD) --chunk-load-threads=$(printenv CHUNK_LOAD_THREADS) --max-chunks=$(printenv MAX_CHUNKS) -o allow_other"
-plexdrive_options="mount --config=/config --cache-file=${plexdrive_cache_bolt} --chunk-size=$(printenv CHUNK_SIZE) --chunk-check-threads=$(printenv CHUNK_CHECK_THREADS) --chunk-load-ahead=$(printenv CHUNK_LOAD_AHEAD) --chunk-load-threads=$(printenv CHUNK_LOAD_THREADS) --max-chunks=$(printenv MAX_CHUNKS) --uid=${_puid:-911} --gid=${_pgid:-911} -o allow_other --umask=$(printenv PLEXDRIVE_MOUNT_UMASK) --root-node-id=$(printenv PLEXDRIVE_ROOT_NODE_ID)"
+rclone_read_mount_options="${rclone_mount_options} --read-only"
+rclone_mount_options="${rclone_mount_options} $(printenv RCLONE_CLOUD_OPTIONS)"
 
-if [ "$(printenv READ_ONLY)" != "0" ]; then
-    rclone_mount_options="${rclone_mount_options} --read-only"
-    plexdrive_options="${plexdrive_options} -o read_only"
+if [ "$(printenv RCLONE_READ_TYPE)" == "CACHE" ]; then
+    rclone_read_mount_options="${rclone_read_mount_options} --cache-db-path=/chunks/cache.db --cache-dir=/chunks/vfs --cache-chunk-path=/chunks $(printenv RCLONE_CACHE_READ_OPTIONS)"
+fi
+
+if [ "$(printenv RCLONE_READ_TYPE)" == "VFS" ]; then
+    rclone_read_mount_options="${rclone_read_mount_options} $(printenv RCLONE_VFS_READ_OPTIONS)"
 fi
 
 if [ "$(printenv RCLONE_VERBOSE)" != "0" ]; then
@@ -46,20 +44,26 @@ if [ "$(printenv RCLONE_LOG_LEVEL)" != "" ]; then
   rclone_mount_options="${rclone_mount_options} --log-level $(printenv RCLONE_LOG_LEVEL)"
 fi
 
-###ufs_options="-o uid=${_puid:-911} -o gid=${_pgid:-911} -o allow_other"
 ufs_options="-o uid=${_puid:-911} -o gid=${_pgid:-911} -o cow,allow_other,direct_io,nonempty,auto_cache,sync_read"
-mfs_options="-o uid=${_puid:-911} -o gid=${_pgid:-911} -o defaults,nonempty,allow_other,direct_io,use_ino,category.create=ff,category.search=ff,minfreespace=0"
+#mfs_options="-o uid=${_puid:-911} -o gid=${_pgid:-911} -o defaults,nonempty,allow_other,direct_io,use_ino,category.create=ff,category.search=ff,minfreespace=0,func.getattr=newest"
+mfs_options="-o uid=${_puid:-911} -o gid=${_pgid:-911} -o $(printenv MERGERFS_OPTIONS)"
 
-###temp disable
-###if [ "$(printenv UFS_ADDITIONAL_MOUNT_OPTIONS)" != "" ]; then
-  #ufs_options="${ufs_options} -o cow,direct_io,nonempty,auto_cache,sync_read"
-###  ufs_options="${ufs_options} -o $(printenv UFS_ADDITIONAL_MOUNT_OPTIONS)"
-##fi
 
 rclone_cloud_endpoint=$(printenv RCLONE_CLOUD_ENDPOINT | tr -d '"' | tr -d "'")
-rclone_mirror_endpoint=$(printenv RCLONE_MIRROR_ENDPOINT | tr -d '"' | tr -d "'")
 rclone_local_endpoint=$(printenv RCLONE_LOCAL_ENDPOINT | tr -d '"' | tr -d "'")
-rclone_union_endpoint=$(printenv RCLONE_UNION_ENDPOINT | tr -d '"' | tr -d "'")
+
+if [ "$(printenv RCLONE_READ_TYPE)" == "CACHE" ]; then
+    rclone_read_endpoint=$(printenv RCLONE_CACHE_ENDPOINT | tr -d '"' | tr -d "'")
+fi
+
+if [ "$(printenv RCLONE_READ_TYPE)" == "VFS" ]; then
+    rclone_read_endpoint=$(printenv RCLONE_CLOUD_ENDPOINT | tr -d '"' | tr -d "'")
+fi
+
+if [ "$(printenv RCLONE_READ_MANUAL_ENDPOINT)" != "" ]; then
+    rclone_read_endpoint=$(printenv RCLONE_READ_MANUAL_ENDPOINT | tr -d '"' | tr -d "'")
+fi
+
 
 if [ ! -f "${rclone_exclude_file}" ]; then
   touch ${rclone_exclude_file}
@@ -74,3 +78,7 @@ secrets_dir="/secrets"
 if [ -d "${secrets_dir}" ]; then
     cp ${secrets_dir}/* /config/
 fi
+
+cloud_upload_time=$(printenv CLOUDUPLOADTIME)
+rm_delete_time=$(printenv RMDELETETIME)
+cron_log=/log/cron.log

@@ -24,7 +24,7 @@ chmod a+r /etc/fuse.conf
 chown -R abc:abc \
     /config \
     /usr/bin/* \
-    $cloud_encrypt_dir \
+    $read_decrypt_dir \
     $cloud_decrypt_dir \
     $local_decrypt_dir \
     $local_media_dir
