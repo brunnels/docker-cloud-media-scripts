@@ -14,7 +14,6 @@ RUN apt-get update && \
     apt-get install -y \
         curl \
         fuse \
-        unionfs-fuse \
         bc \
         unzip \
         wget \
@@ -22,14 +21,6 @@ RUN apt-get update && \
     update-ca-certificates && \
     apt-get install -y openssl && \
     sed -i 's/#user_allow_other/user_allow_other/' /etc/fuse.conf
-
-###################
-# MergerFS
-###################
-RUN \
-  wget https://github.com/trapexit/mergerfs/releases/download/2.25.0/mergerfs_2.25.0.ubuntu-xenial_amd64.deb && \
-  dpkg -i mergerfs_2.25.0.ubuntu-xenial_amd64.deb && \
-  rm mergerfs*.deb
 
 # S6 overlay
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
@@ -53,7 +44,7 @@ ENV CHECKERS "16"
 ENV RCLONE_CLOUD_ENDPOINT "gd-crypt:"
 ENV RCLONE_LOCAL_ENDPOINT "local-crypt:"
 ENV RCLONE_VERBOSE "0"
-ENV RCLONE_LOG_LEVEL "NOTICE"
+ENV RCLONE_LOG_LEVEL "INFO"
 ENV RCLONE_REMOTE_CONTROL "0"
 ENV RCLONE_MOUNT_UMASK "0022"
 
