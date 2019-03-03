@@ -1,30 +1,30 @@
 #!/usr/bin/with-contenv sh
 
-PUID=${PUID:-911}
-PGID=${PGID:-911}
+PUID=${USER_GID:-911}
+PGID=${USER_GID:-911}
 
-if [ ! "$(id -u abc)" -eq "$PUID" ]; then usermod -o -u "$PUID" abc ; fi
-if [ ! "$(id -g abc)" -eq "$PGID" ]; then groupmod -o -g "$PGID" abc ; fi
+if [ ! "$(id -u $USER_NAME)" -eq "$PUID" ]; then usermod -o -u "$PUID" $USER_NAME ; fi
+if [ ! "$(id -g $USER_NAME)" -eq "$PGID" ]; then groupmod -o -g "$PGID" $USER_NAME ; fi
 
 . "/usr/bin/variables"
 
 echo "
 GID/UID
 -------------------------------------
-User uid:    $(id -u abc)
-User gid:    $(id -g abc)
+User '${USER_NAME}' uid:    $(id -u $USER_NAME)
+User '${USER_NAME}' gid:    $(id -g $USER_NAME)
 -------------------------------------
 "
 chmod -R 777 \
 	/var/lock \
-    $log_dir
+  $log_dir
 
 chmod a+r /etc/fuse.conf
 
-chown -R abc:abc \
-    /config \
-    /usr/bin/* \
-    $read_decrypt_dir \
-    $cloud_decrypt_dir \
-    $local_decrypt_dir \
-    $local_media_dir
+chown -R $USER_NAME:$USER_NAME \
+  /config \
+  /usr/bin/* \
+  $read_decrypt_dir \
+  $cloud_decrypt_dir \
+  $local_decrypt_dir \
+  $local_media_dir

@@ -1,35 +1,27 @@
 #!/bin/bash
 
-_puid=$(printenv PUID)
-_pgid=$(printenv PGID)
+_puid=$(printenv USER_UID)
+_pgid=$(printenv USER_GID)
 
+# gcloud mount point
 cloud_decrypt_dir="/cloud-decrypt"
-
+# readonly vfs mount point
 read_decrypt_dir="/read-decrypt"
-
+# local filesystem mount point
 local_decrypt_dir="/local-decrypt"
+# mergerfs mount point
 local_media_dir="/local-media"
-local_media_edit_dir="/local-media-edit"
 
 rclone_config="--config=/config/rclone.conf"
 rclone_exclude_file="/config/exclude.txt"
 rclone_options="${rclone_config} --buffer-size $(printenv COPY_BUFFER_SIZE) --checkers $(printenv COPY_CHECKERS)"
-rclone_mirror_options="${rclone_config} --exclude-from=${rclone_exclude_file} --transfers $(printenv MIRROR_TRANSFERS) --bwlimit $(printenv MIRROR_BWLIMIT) --tpslimit $(printenv MIRROR_TPS_LIMIT) --tpslimit-burst $(printenv MIRROR_TPS_LIMIT_BURST)"
 rclone_mount_options="${rclone_options} --allow-non-empty --allow-other --uid ${_puid:-911} --gid ${_pgid:-911} --umask $(printenv RCLONE_MASK)"
 
 rclone_read_mount_options="${rclone_mount_options} --read-only"
 rclone_mount_options="${rclone_mount_options} $(printenv RCLONE_CLOUD_OPTIONS)"
-
-if [ "$(printenv RCLONE_READ_TYPE)" == "CACHE" ]; then
-    rclone_read_mount_options="${rclone_read_mount_options} --cache-db-path=/chunks/cache.db --cache-dir=/chunks/vfs --cache-chunk-path=/chunks $(printenv RCLONE_CACHE_READ_OPTIONS)"
-fi
-
-if [ "$(printenv RCLONE_READ_TYPE)" == "VFS" ]; then
-    rclone_read_mount_options="${rclone_read_mount_options} $(printenv RCLONE_VFS_READ_OPTIONS)"
-fi
+rclone_read_mount_options="${rclone_read_mount_options} $(printenv RCLONE_VFS_READ_OPTIONS)"
 
 if [ "$(printenv RCLONE_VERBOSE)" != "0" ]; then
-  rclone_mirror_options="${rclone_mirror_options} --verbose"
   rclone_mount_options="${rclone_mount_options} --verbose"
 fi
 
@@ -40,30 +32,15 @@ else
 fi
 
 if [ "$(printenv RCLONE_LOG_LEVEL)" != "" ]; then
-  rclone_mirror_options="${rclone_mirror_options} --log-level $(printenv RCLONE_LOG_LEVEL)"
   rclone_mount_options="${rclone_mount_options} --log-level $(printenv RCLONE_LOG_LEVEL)"
 fi
 
-ufs_options="-o uid=${_puid:-911} -o gid=${_pgid:-911} -o cow,allow_other,direct_io,nonempty,auto_cache,sync_read"
-#mfs_options="-o uid=${_puid:-911} -o gid=${_pgid:-911} -o defaults,nonempty,allow_other,direct_io,use_ino,category.create=ff,category.search=ff,minfreespace=0,func.getattr=newest"
 mfs_options="-o uid=${_puid:-911} -o gid=${_pgid:-911} -o $(printenv MERGERFS_OPTIONS)"
 
 
 rclone_cloud_endpoint=$(printenv RCLONE_CLOUD_ENDPOINT | tr -d '"' | tr -d "'")
 rclone_local_endpoint=$(printenv RCLONE_LOCAL_ENDPOINT | tr -d '"' | tr -d "'")
-
-if [ "$(printenv RCLONE_READ_TYPE)" == "CACHE" ]; then
-    rclone_read_endpoint=$(printenv RCLONE_CACHE_ENDPOINT | tr -d '"' | tr -d "'")
-fi
-
-if [ "$(printenv RCLONE_READ_TYPE)" == "VFS" ]; then
-    rclone_read_endpoint=$(printenv RCLONE_CLOUD_ENDPOINT | tr -d '"' | tr -d "'")
-fi
-
-if [ "$(printenv RCLONE_READ_MANUAL_ENDPOINT)" != "" ]; then
-    rclone_read_endpoint=$(printenv RCLONE_READ_MANUAL_ENDPOINT | tr -d '"' | tr -d "'")
-fi
-
+rclone_read_endpoint=$(printenv RCLONE_CLOUD_ENDPOINT | tr -d '"' | tr -d "'")
 
 if [ ! -f "${rclone_exclude_file}" ]; then
   touch ${rclone_exclude_file}

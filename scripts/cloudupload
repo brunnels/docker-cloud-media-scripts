@@ -1,5 +1,4 @@
 #!/bin/bash
 . "/usr/bin/variables"
 
-#only upload files to endpoint(s)
 cloudupload.script "$@" 2>&1 | tee "${log_dir}/cloudupload.log"

@@ -68,63 +68,28 @@ mount_union () {
 		mkdir -p "${local_decrypt_dir}"
 	fi
 
-	sleep 5
 
-# Mount plex media directory if not already mounted.
-	# Check Union Mount Program
-	if [ "$(printenv UNION_PROGRAM)" == "UNIONFS" ]; then
-		if [ $(ps -ef | grep "unionfs" | grep -v "grep" | wc -l) == "0" ]; then
-			ufs_mounts="${local_decrypt_dir}=RW:${read_decrypt_dir}=RO"
-			echo "[ $(date $(printenv DATE_FORMAT)) ] Mounting unionfs: ${local_media_dir}"
-			unionfs $ufs_options "${ufs_mounts}" "${local_media_dir}"
-		else
-			echo "[ $(date $(printenv DATE_FORMAT)) ] Union mountpoint: ${local_media_dir} already mounted."
-		fi
+  if [ $(ps -ef | grep "mergerfs" | grep -v "grep" | wc -l) == "0" ]; then
+    mfs_mounts="${local_decrypt_dir}:${read_decrypt_dir}:${cloud_decrypt_dir}"
+    echo "[ $(date $(printenv DATE_FORMAT)) ] Mounting mergerfs: ${local_media_dir}"
+    mergerfs $mfs_options "${mfs_mounts}" "${local_media_dir}"
+  else
+    echo "[ $(date $(printenv DATE_FORMAT)) ] Union mountpoint: ${local_media_dir} already mounted."
+  fi
 
-		if [ $(ps -ef | grep "unionfs" | grep -v "grep" | wc -l) == "1" ]; then
-			ufs_mounts="${local_decrypt_dir}=RW:${cloud_decrypt_dir}=RW"
-			echo "[ $(date $(printenv DATE_FORMAT)) ] Mounting edit unionfs: ${local_media_edit_dir}"
-			unionfs $ufs_options "${ufs_mounts}" "${local_media_edit_dir}"
-		else
-			echo "[ $(date $(printenv DATE_FORMAT)) ] Union mountpoint: ${local_media_edit_dir} already mounted."
-		fi
-	fi
-
-	if [ "$(printenv UNION_PROGRAM)" == "MERGERFS" ]; then
-		if [ $(ps -ef | grep "mergerfs" | grep -v "grep" | wc -l) == "0" ]; then
-			mfs_mounts="${local_decrypt_dir}:${read_decrypt_dir}:${cloud_decrypt_dir}"
-			echo "[ $(date $(printenv DATE_FORMAT)) ] Mounting mergerfs: ${local_media_dir}"
-			mergerfs $mfs_options "${mfs_mounts}" "${local_media_dir}"
-		else
-			echo "[ $(date $(printenv DATE_FORMAT)) ] Union mountpoint: ${local_media_dir} already mounted."
-		fi
-	fi
-
-	if [ "$(printenv UNION_PROGRAM)" == "RCLONE" ]; then
-		check_rclone_union
-		echo "[ $(date $(printenv DATE_FORMAT)) ] Mounting union: ${local_media_dir}"
-		rclone mount $rclone_mount_options "$@" "${rclone_union_endpoint}" "${local_media_dir}" &
-	fi
 
 }
 
 install_cron () {
-
 	#Output environmental variables for cron
 	env >> /etc/environment
 	echo "${cloud_upload_time} cloudupload >> ${cron_log} 2>&1" >> /etc/crontabs/root
 	echo "${rm_delete_time} rmlocal >> ${cron_log} 2>&1" >> /etc/crontabs/root
 	crond -b
-
 }
 
 precache () {
-	#Precache
-	if ([ "$(printenv RCLONE_PRECACHE)" == "1" ] && [ "$(printenv RCLONE_PRECACHE_METHOD)" == "FIND" ]) || ([ "$(printenv RCLONE_PRECACHE)" == "1" ] && [ "$(printenv RCLONE_READ_TYPE)" == "CACHE" ]); then
-		/usr/bin/find $(printenv RCLONE_PRECACHE_DIR)
-	fi
-
-	if ([ "$(printenv RCLONE_PRECACHE)" == "1" ] && [ "$(printenv RCLONE_PRECACHE_METHOD)" == "VFS" ]) || ([ "$(printenv RCLONE_PRECACHE)" == "1" ] && [ "$(printenv RCLONE_READ_TYPE)" == "VFS" ]); then
+	if ([ "$(printenv RCLONE_PRECACHE)" == "1" ]); then
 		rclone rc vfs/refresh recursive=true
 	fi
 }
