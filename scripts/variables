@@ -1,6 +1,7 @@
 #!/bin/bash
 PUID=${PUID:-99}
 PGID=${PGID:-100}
+UMASK=${UMASK:-000}
 
 # gcloud mount point
 cloud_decrypt_dir="/cloud-decrypt"
