@@ -3,7 +3,7 @@
 
 umask 022
 
-mount_command="mount"
+rlconemount_command="rlconemount"
 
-echo "Started ${mount_command}"
-exec $mount_command
+echo "Started ${rlconemount_command}"
+exec $rlconemount_command

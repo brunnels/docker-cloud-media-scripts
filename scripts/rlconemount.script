@@ -24,7 +24,6 @@ mount_read_gdrive () {
 	else
 		echo "[ $(date $(printenv DATE_FORMAT)) ] Google Drive mountpoint: ${read_decrypt_dir} already mounted."
 	fi
-
 }
 
 mount_gdrive () {
@@ -55,7 +54,6 @@ mount_gdrive () {
 		echo "Waiting for mount ${read_encrypt_dir} ..."
 		sleep 10
 	done
-
 }
 
 mount_union () {
@@ -68,7 +66,6 @@ mount_union () {
 		mkdir -p "${local_decrypt_dir}"
 	fi
 
-
   if [ $(ps -ef | grep "mergerfs" | grep -v "grep" | wc -l) == "0" ]; then
     mfs_mounts="${local_decrypt_dir}:${read_decrypt_dir}:${cloud_decrypt_dir}"
     echo "[ $(date $(printenv DATE_FORMAT)) ] Mounting mergerfs: ${local_media_dir}"
@@ -76,8 +73,6 @@ mount_union () {
   else
     echo "[ $(date $(printenv DATE_FORMAT)) ] Union mountpoint: ${local_media_dir} already mounted."
   fi
-
-
 }
 
 install_cron () {
