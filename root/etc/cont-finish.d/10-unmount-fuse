@@ -1,5 +1,5 @@
 #!/usr/bin/with-contenv sh
-. "/usr/bin/variables"
+. "/usr/local/bin/variables"
 
 # unmount fuse
 fusermount -uz "${read_decrypt_dir}"

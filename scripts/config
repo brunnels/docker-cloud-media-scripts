@@ -1,5 +1,5 @@
 #!/bin/bash
-. "/usr/bin/variables"
+. "variables"
 
 check_rclone_read () {
 	if [[ ! "${rclone_read_endpoint}" == *: ]]; then
@@ -11,7 +11,7 @@ check_rclone_read () {
 		exit 02
 	fi
 
-	if [ "$(rclone listremotes $rclone_config | grep "${rclone_read_endpoint}" | wc -l)" == "0" ]; then
+	if [[ "$(rclone listremotes ${rclone_config} | grep "${rclone_read_endpoint}" | wc -l)" == "0" ]]; then
 		printf "\n\n"
 		echo "RCLONE_READ_ENDPOINT (${rclone_read_endpoint}) endpoint has not been created within rclone"
 		echo "Run: docker exec -ti <DOCKER_CONTAINER> rclone_setup"

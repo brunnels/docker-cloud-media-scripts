@@ -1,75 +1,64 @@
 #!/bin/bash
 ###############################################################################
-# mount.remote - A script to mount GDrive remote for use with Plex
-###############################################################################
 # CONFIGURATION
 ###############################################################################
 # shellcheck source=config
 
-. "/usr/bin/config"
-###############################################################################
-# FUNCTIONS
-###############################################################################
+. "config"
+##############################################################################
 mount_read_gdrive () {
 	check_rclone_read
 
-	# Make sure GD mountpoint exists.
-	if [ ! -d "${read_decrypt_dir}" ]; then
+	if [[ ! -d "${read_decrypt_dir}" ]]; then
 		mkdir -p "${read_decrypt_dir}"
 	fi
 
-	if [ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "0" ]; then
+	if [[ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "0" ]]; then
 		echo "[ $(date $(printenv DATE_FORMAT)) ] Mounting read Google Drive: ${read_decrypt_dir}"
-		rclone mount $rclone_read_mount_options "$@" "${rclone_read_endpoint}" "${read_decrypt_dir}" &
+		rclone mount ${rclone_read_mount_options} "$@" "${rclone_read_endpoint}" "${read_decrypt_dir}" &
 	else
-		echo "[ $(date $(printenv DATE_FORMAT)) ] Google Drive mountpoint: ${read_decrypt_dir} already mounted."
+		echo "[ $(date $(printenv DATE_FORMAT)) ] Google Drive read mountpoint: ${read_decrypt_dir} already mounted."
 	fi
+
+	sleep 5
+
+	while [[ -z "$(ls -A ${read_decrypt_dir})" ]]
+	do
+		echo "Waiting for mount ${read_decrypt_dir} ..."
+		sleep 10
+	done
 }
 
 mount_gdrive () {
 	check_rclone_cloud
 
-	# Make sure GD mountpoint exists.
-	if [ ! -d "${cloud_decrypt_dir}" ]; then
+	if [[ ! -d "${cloud_decrypt_dir}" ]]; then
 		mkdir -p "${cloud_decrypt_dir}"
 	fi
 
-	if [ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "1" ]; then
+  # we're checking for true here because the rclone_read_endpoint should already be mounted
+	if [[ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "1" ]]; then
 		echo "[ $(date $(printenv DATE_FORMAT)) ] Mounting direct Google Drive: ${cloud_decrypt_dir}"
-		rclone mount $rclone_mount_options "$@" "${rclone_cloud_endpoint}" "${cloud_decrypt_dir}" &
+		rclone mount ${rclone_mount_options} "$@" "${rclone_cloud_endpoint}" "${cloud_decrypt_dir}" &
 	else
-		echo "[ $(date $(printenv DATE_FORMAT)) ] Google Drive mountpoint: ${cloud_decrypt_dir} already mounted."
+		echo "[ $(date $(printenv DATE_FORMAT)) ] Google Drive read mountpoint: ${rclone_mount_options} NOT already mounted. Bugging out"
+		exit 02
 	fi
-
-	sleep 5
-
-	while [ -z "$(ls -A ${cloud_encrypt_dir})" ]
-	do
-		echo "Waiting for mount ${cloud_encrypt_dir} ..."
-		sleep 10
-	done
-
-	while [ -z "$(ls -A ${read_encrypt_dir})" ]
-	do
-		echo "Waiting for mount ${read_encrypt_dir} ..."
-		sleep 10
-	done
 }
 
 mount_union () {
-	# Make sure combined plex media directory exists.
-	if [ ! -d "${local_media_dir}" ]; then
+	if [[ ! -d "${local_media_dir}" ]]; then
 		mkdir -p "${local_media_dir}"
 	fi
 
-	if [ ! -d "${local_decrypt_dir}" ]; then
+	if [[ ! -d "${local_decrypt_dir}" ]]; then
 		mkdir -p "${local_decrypt_dir}"
 	fi
 
-  if [ $(ps -ef | grep "mergerfs" | grep -v "grep" | wc -l) == "0" ]; then
+  if [[ $(ps -ef | grep "mergerfs" | grep -v "grep" | wc -l) == "0" ]]; then
     mfs_mounts="${local_decrypt_dir}:${read_decrypt_dir}:${cloud_decrypt_dir}"
     echo "[ $(date $(printenv DATE_FORMAT)) ] Mounting mergerfs: ${local_media_dir}"
-    mergerfs $mfs_options "${mfs_mounts}" "${local_media_dir}"
+    mergerfs ${mfs_options} "${mfs_mounts}" "${local_media_dir}"
   else
     echo "[ $(date $(printenv DATE_FORMAT)) ] Union mountpoint: ${local_media_dir} already mounted."
   fi
@@ -84,7 +73,7 @@ install_cron () {
 }
 
 precache () {
-	if ([ "$(printenv RCLONE_PRECACHE)" == "1" ]); then
+	if ([[ "$(printenv RCLONE_PRECACHE)" == "1" ]]); then
 		rclone rc vfs/refresh recursive=true
 	fi
 }

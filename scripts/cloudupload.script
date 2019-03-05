@@ -4,7 +4,7 @@
 ###############################################################################
 # shellcheck source=config
 
-. "/usr/bin/config"
+. "config"
 ##############################################################################
 
 # If script is already running; abort.
@@ -15,7 +15,7 @@ fi
 
 check_rclone_cloud
 
-addedSize=0
+newSize=0
 oldSize=0
 
 echo "[ $(date $(printenv DATE_FORMAT)) ] ###### Start cloud upload ######"
@@ -37,14 +37,14 @@ find "${local_decrypt_dir}" -type f -print0 | xargs -0 stat --format '%Y :%y %n'
 			(*.download*) continue ;;
 		esac
 		
-		if [ -f "${cloud_decrypt_dir}${filename}" ]; then
-                        continue
-                fi
+		if [[ -f "${cloud_decrypt_dir}${filename}" ]]; then
+      continue
+    fi
 
 		# If file is opened by another process, wait until it isn't.
-		while [ "$(lsof "$n" >/dev/null 2>&1)" ] || \
-			[ "$(lsof "${local_decrypt_dir}/${n}" >/dev/null 2>&1)" ] || \
-			[ "$(lsof "${local_media_dir}/${n}" >/dev/null 2>&1)" ]; do
+		while [[ "$(lsof "$n" >/dev/null 2>&1)" ]] || \
+			[[ "$(lsof "${local_decrypt_dir}/${n}" >/dev/null 2>&1)" ]] || \
+			[[ "$(lsof "${local_media_dir}/${n}" >/dev/null 2>&1)" ]]; do
 			echo "[ $(date $(printenv DATE_FORMAT)) ] File -> ${n} in use. Retrying in 10 seconds."
 			sleep 10
 		done
@@ -52,22 +52,22 @@ find "${local_decrypt_dir}" -type f -print0 | xargs -0 stat --format '%Y :%y %n'
 		# Copy file to remote destination[s], retaining path
 		echo "[ $(date $(printenv DATE_FORMAT)) ] Uploading File: ${cloud_decrypt_dir}${filename} to: ${rclone_cloud_endpoint}${destpath}"
 
- 		rclone copy $rclone_options "$@" "$n" "${rclone_cloud_endpoint}${destpath}" >/dev/null 2>&1
+ 		rclone copy ${rclone_options} "$@" "$n" "${rclone_cloud_endpoint}${destpath}" >/dev/null 2>&1
 
 		fileSize=$(du -sb "$n" | awk '{print $1}')
-                addedSize=$((addedSize + fileSize))
+    newSize=$((newSize + fileSize))
+    sizeInMb=$((newSize / 1000 / 1000))
+    diffSize=$((newSize - oldSize))
 
-                sizeInMb=$((addedSize / 1000 / 1000))
-                diffSize=$((addedSize - oldSize))
-                if [[ "${sizeInMb}" -gt 1000 ]]; then
-                        if [[ "${diffSize}" -gt "1000000000" ]]; then # greater than 1 GB
-                                oldSize=$addedSize
-                                echo "[ $(date $(printenv DATE_FORMAT)) ] $((sizeInMb / 1000)) GB uploaded"
-                        fi
-                elif [[ "${diffSize}" -gt "100000000" ]]; then # greater than 100 MB
-                        oldSize=$addedSize
-                        echo "[$(date $(printenv DATE_FORMAT)) ] ${sizeInMb} MB uploaded"
-                fi
+    if [[ "${sizeInMb}" -gt 1000 ]]; then
+      if [[ "${diffSize}" -gt "1000000000" ]]; then # greater than 1 GB
+        oldSize=$newSize
+        echo "[ $(date $(printenv DATE_FORMAT)) ] $((sizeInMb / 1000)) GB uploaded"
+      fi
+    elif [[ "${diffSize}" -gt "100000000" ]]; then # greater than 100 MB
+      oldSize=$newSize
+      echo "[$(date $(printenv DATE_FORMAT)) ] ${sizeInMb} MB uploaded"
+    fi
 	done
 
 echo "[ $(date $(printenv DATE_FORMAT)) ] ###### Cloud upload ended successfully ######"

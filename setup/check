@@ -1,32 +1,32 @@
 #!/bin/bash
-. "/usr/bin/config"
+. "config"
 
 all_good=1
 
 check_rclone_read
 check_rclone_cloud
 
-if [ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "0" ]; then
+if [[ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "0" ]]; then
     printf "\n\nRclone is not running\n\n"
     all_good=0
 fi
 
-if [ -z "$(ls -A ${cloud_decrypt_dir})" ]; then
+if [[ -z "$(ls -A ${cloud_decrypt_dir})" ]]; then
     printf "\n\nWaiting for ${cloud_decrypt_dir}\n\n"
     exit 0
 fi
 
-if [ -z "$(ls -A ${read_decrypt_dir})" ]; then
+if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
     printf "\n\nWaiting for ${read_decrypt_dir}\n\n"
     exit 0
 fi
 
-if [ $(ps -ef | grep "mergerfs" | grep -v "grep" | wc -l) == "0" ]; then
+if [[ $(ps -ef | grep "mergerfs" | grep -v "grep" | wc -l) == "0" ]]; then
     printf "\n\MergerFS is not running\n\n"
     all_good=0
 fi
 
-if [ "$all_good" -eq "1" ]; then
+if [[ "$all_good" -eq "1" ]]; then
    printf "\n\nEverything looks good\n\n"
 else
     exit 0

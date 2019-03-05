@@ -1,5 +1,4 @@
 #!/bin/bash
-. "/usr/bin/variables"
+. "variables"
 
-#sleep 5
 rlconemount.script "$@" 2>&1 | tee "${log_dir}/rlconemount.log"

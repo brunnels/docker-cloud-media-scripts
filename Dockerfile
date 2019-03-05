@@ -9,13 +9,15 @@ ENV COPY_BUFFER_SIZE="512M" \
     DATE_FORMAT="+%F@%T" \
     PLEX_URL="" \
     PLEX_TOKEN="" \
+    # Can have VERBOSE or LOG_LEVEL NOT BOTH.
+    # VERBOSE trumps LOG_LEVEL
     RCLONE_VERBOSE=0 \
     RCLONE_LOG_LEVEL="NOTICE" \
     RCLONE_REMOTE_CONTROL=0 \
     RCLONE_LOCAL_ENDPOINT="local-decrypt:" \
     RCLONE_CLOUD_ENDPOINT="direct-decrypt:" \
     RCLONE_CLOUD_OPTIONS="--dir-cache-time=70h" \
-    RCLONE_READ_OPTIONS="--allow-other --buffer-size=2048M --dir-cache-time=72h --drive-chunk-size=256M --vfs-read-chunk-size=256M --vfs-read-chunk-size-limit=0 --transfers=10 --rc --tpslimit=5 -vv" \
+    RCLONE_READ_OPTIONS="--allow-other --buffer-size=2048M --dir-cache-time=72h --drive-chunk-size=256M --vfs-read-chunk-size=256M --vfs-read-chunk-size-limit=0 --transfers=10 --rc --tpslimit=5" \
     MERGERFS_OPTIONS="splice_move,atomic_o_trunc,auto_cache,big_writes,default_permissions,direct_io,nonempty,allow_other,sync_read,category.create=ff,category.search=ff,minfreespace=0" \
     RCLONE_PRECACHE=1 \
     REMOVE_LOCAL_FILES_BASED_ON="" \
@@ -32,8 +34,8 @@ ENV COPY_BUFFER_SIZE="512M" \
     PGID=1000 \
     UMASK=000
 
-COPY setup/* /usr/bin/
-COPY scripts/* /usr/bin/
+COPY setup/* /usr/local/bin/
+COPY scripts/* /usr/local/bin/
 COPY root /
 
 RUN apk update \
@@ -54,7 +56,7 @@ RUN apk update \
     curl \
     unzip \
     wget \
- && chmod a+x /usr/bin/* \
+ && chmod a+x /usr/local/bin/* \
  && rm -rf /tmp/*
 
 VOLUME /config /read-decrypt /cloud-decrypt /local-decrypt /local-media /log

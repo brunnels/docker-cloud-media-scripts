@@ -1,9 +1,6 @@
 #!/usr/bin/with-contenv sh
-. "/usr/bin/variables"
-
+. "/usr/local/bin/variables"
 umask 022
-
-rlconemount_command="rlconemount"
 
 echo "Started ${rlconemount_command}"
 exec $rlconemount_command

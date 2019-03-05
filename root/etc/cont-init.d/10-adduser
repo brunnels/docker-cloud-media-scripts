@@ -1,28 +1,58 @@
 #!/usr/bin/with-contenv sh
+. "/usr/local/bin/variables"
 
-PUID=${PUID:-99}
-PGID=${PGID:-100}
-
-if [ ! "$(id -u $USER_NAME)" -eq "${PUID}" ]; then usermod -o -u ${PUID} ${USER_NAME} ; fi
-if [ ! "$(id -g $USER_NAME)" -eq "${PUID}" ]; then groupmod -o -g ${PGID} ${USER_NAME} ; fi
-
-. "/usr/bin/variables"
+if [[ ! "$(id -u $(printenv USER_NAME))" -eq "${PUID}" ]]; then usermod -o -u ${PUID} $(printenv USER_NAME) ; fi
+if [[ ! "$(id -g $(printenv USER_NAME))" -eq "${PUID}" ]]; then groupmod -o -g ${PGID} $(printenv USER_NAME) ; fi
 
 echo "
 ---------------------------------------
-User '${USER_NAME}' GID/UID:  $(id -u $USER_NAME)/$(id -g $USER_NAME)
+User '$(printenv USER_NAME)' GID/UID:  $(id -u $(printenv USER_NAME))/$(id -g $(printenv USER_NAME))
 ---------------------------------------
 "
+if [[ ! -d "${log_dir}" ]]; then
+	mkdir -p "${log_dir}"
+	chown $(printenv USER_NAME):$(printenv USER_NAME) ${log_dir}
+fi
+
+if [[ -d "${secrets_dir}" ]]; then
+    cp ${secrets_dir}/* /config/
+fi
+
+if [[ ! -d "${log_dir}" ]]; then
+	mkdir -p "${log_dir}"
+	chown $(printenv USER_NAME):$(printenv USER_NAME) ${log_dir}
+fi
+
+if [[ ! -d "${local_decrypt_dir}" ]]; then
+  mkdir -p "${local_decrypt_dir}"
+  chown $(printenv USER_NAME):$(printenv USER_NAME) ${local_decrypt_dir}
+fi
+
+if [[ ! -d "${read_decrypt_dir}" ]]; then
+  mkdir -p "${read_decrypt_dir}"
+  chown $(printenv USER_NAME):$(printenv USER_NAME) ${read_decrypt_dir}
+fi
+
+if [[ ! -d "${cloud_decrypt_dir}" ]]; then
+  mkdir -p "${cloud_decrypt_dir}"
+  chown $(printenv USER_NAME):$(printenv USER_NAME) ${cloud_decrypt_dir}
+fi
+
+if [[ ! -d "${local_media_dir}" ]]; then
+  mkdir -p "${local_media_dir}"
+  chown $(printenv USER_NAME):$(printenv USER_NAME) ${local_media_dir}
+fi
+
 chmod -R 777 \
 	/var/lock \
   ${log_dir}
 
 chmod a+r /etc/fuse.conf
 
-chown -R ${USER_NAME}:${USER_NAME} \
+chown -R $(printenv USER_NAME):$(printenv USER_NAME) \
   /config \
-  /usr/bin/* \
-  ${read_decrypt_dir} \
-  ${cloud_decrypt_dir} \
-  ${local_decrypt_dir} \
-  ${local_media_dir}
+  /usr/local/bin/*
+
+
+
+
