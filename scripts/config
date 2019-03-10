@@ -3,8 +3,7 @@
 
 check_rclone_read () {
 	if [[ ! "${rclone_read_endpoint}" == *: ]]; then
-		echo "Missing colon (:) in RCLONE_READ_ENDPOINT (${rclone_read_endpoint})"
-		echo "Run: docker exec -ti <DOCKER_CONTAINER> rclone_setup"
+		echo "$(date "$(printenv DATE_FORMAT)") ERROR: Missing colon (:) in RCLONE_READ_ENDPOINT (${rclone_read_endpoint})"
     sleep 5000
 		exit 02
 	fi
