@@ -2,5 +2,5 @@
 . "/usr/local/bin/variables"
 umask 022
 
-echo "Started ${rlconemount_command}"
-exec $rlconemount_command
+echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Starting /usr/local/bin/${rclonemount_command}"
+exec $rclonemount_command

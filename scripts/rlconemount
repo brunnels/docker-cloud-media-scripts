@@ -1,4 +1,0 @@
-#!/bin/bash
-. "variables"
-
-rlconemount.script "$@" 2>&1 | tee "${log_dir}/rlconemount.log"

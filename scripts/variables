@@ -3,7 +3,7 @@ PUID=${PUID:-99}
 PGID=${PGID:-100}
 UMASK=${UMASK:-000}
 
-rlconemount_command="rlconemount"
+rclonemount_command="rclonemount"
 
 cloud_upload_time=$(printenv CLOUDUPLOADTIME)
 rm_delete_time=$(printenv RMDELETETIME)

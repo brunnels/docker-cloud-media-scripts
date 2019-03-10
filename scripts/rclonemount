@@ -1,0 +1,4 @@
+#!/bin/bash
+. "variables"
+
+rclonemount.script "$@" 2>&1 | tee "${log_dir}/rclonemount.log"
