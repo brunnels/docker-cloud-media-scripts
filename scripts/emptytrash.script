@@ -23,12 +23,12 @@ getSections() {
   fi
 
   sections=$(curl -s -G -L "${plex_url}/library/sections?X-Plex-Token=${plex_token}" | sed -n 's/.*key="\([^"]*\).*/\1/p')
-  echo $sections
+  echo ${sections}
 }
 
 isRefreshing() {
   refreshing=$(curl -s -G -L "${plex_url}/library/sections?X-Plex-Token=${plex_token}" | grep 'refreshing="1"')
-  echo $refreshing
+  echo ${refreshing}
 }
 
 emptyTrash() {
@@ -51,7 +51,7 @@ emptyTrash() {
       exit 02
     fi
 
-    for i in $sections
+    for i in ${sections}
     do
       if [[ ! -z "${i}" ]]; then
         echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Empty trash for section '${i}'"

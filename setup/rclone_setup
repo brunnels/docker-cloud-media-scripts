@@ -24,4 +24,4 @@ printf "\t- Choose to enter pass phrase for the salt or leave it blank. I prefer
 
 printf "==============================================================\n\n\n"
 
-rclone $rclone_config config
+rclone ${rclone_config} config

@@ -55,11 +55,11 @@ find ${local_decrypt_dir} -type f -print0 | xargs -0 stat --format '%Y :%y %n' |
 
     if [[ "${sizeInMb}" -gt 1000 ]]; then
       if [[ "${diffSize}" -gt "1000000000" ]]; then # greater than 1 GB
-        oldSize=$newSize
+        oldSize=${newSize}
         echo "$(date "$(printenv DATE_FORMAT)") NOTICE: $((sizeInMb / 1000)) GB uploaded"
       fi
     elif [[ "${diffSize}" -gt "100000000" ]]; then # greater than 100 MB
-      oldSize=$newSize
+      oldSize=${newSize}
       echo "$(date "$(printenv DATE_FORMAT)") NOTICE: ${sizeInMb} MB uploaded"
     fi
 	done
