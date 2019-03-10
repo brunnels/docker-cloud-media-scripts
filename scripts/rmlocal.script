@@ -35,11 +35,11 @@ do_move() {
   while [[ "$(lsof "${1}" >/dev/null 2>&1)" ]] || \
     [[ "$(lsof "${local_decrypt_dir}/${1}" >/dev/null 2>&1)" ]] || \
     [[ "$(lsof "${local_media_dir}/${1}" >/dev/null 2>&1)" ]]; do
-    echo "$(date "$(printenv DATE_FORMAT)") WARN: File -> ${1} in use. Retrying in 10 seconds."
+    echo "$(date "$(printenv DATE_FORMAT)") WARN: File '${1}' in use. Retrying in 10 seconds."
     sleep 10
   done
 
-  echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Moving File: ${local_decrypt_dir}${filename} to: ${rclone_cloud_endpoint}${destpath}"
+  echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Moving File: '${local_decrypt_dir}${filename}' to: '${rclone_cloud_endpoint}${destpath}'"
 
   # Move file to remote destination[s], retaining path
   rclone move ${rclone_options} "$@" "${1}" "${rclone_cloud_endpoint}${destpath}" >/dev/null 2>&1

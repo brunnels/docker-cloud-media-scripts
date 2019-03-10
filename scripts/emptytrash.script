@@ -47,14 +47,14 @@ emptyTrash() {
 
     sections=$(getSections)
     if [[ -z "${sections}" ]]; then
-      echo "$(date "$(printenv DATE_FORMAT)") ERROR: Could not get sections from ${plex_url} with the inserted token. Aborting..."
+      echo "$(date "$(printenv DATE_FORMAT)") ERROR: Could not get sections from '${plex_url}' with the inserted token. Aborting..."
       exit 02
     fi
 
     for i in $sections
     do
       if [[ ! -z "${i}" ]]; then
-        echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Empty trash for section ${i}"
+        echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Empty trash for section '${i}'"
         curl -s -X PUT -L "${plex_url}/library/sections/${i}/emptyTrash?X-Plex-Token=${plex_token}"
       fi
     done

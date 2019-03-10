@@ -1,4 +1,10 @@
 #!/bin/bash
 . "variables"
 
+# If script is already running; abort.
+if pidof -o %PPID -x "$(basename "$0").script"; then
+	echo "$(date "$(printenv DATE_FORMAT)") WARN: $(basename "$0").script already running. Aborting."
+	exit 3
+fi
+
 rclonemount.script "$@" 2>&1 | tee "${log_dir}/rclonemount.log"

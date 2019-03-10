@@ -67,7 +67,7 @@ mount_union () {
     echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting mergerfs: ${local_media_dir}"
     mergerfs ${mfs_options} "${mfs_mounts}" "${local_media_dir}"
   else
-    echo "$(date "$(printenv DATE_FORMAT)") WARN: Union mountpoint: ${local_media_dir} already mounted."
+    echo "$(date "$(printenv DATE_FORMAT)") WARN: mergerfs mountpoint: ${local_media_dir} already mounted."
   fi
 }
 

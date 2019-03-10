@@ -7,12 +7,6 @@
 . "config"
 ##############################################################################
 
-# If script is already running; abort.
-if pidof -o %PPID -x "$(basename "$0")"; then
-	echo "$(date "$(printenv DATE_FORMAT)") WARN: $(basename "$0") already running. Aborting."
-	exit 3
-fi
-
 check_rclone_cloud
 
 newSize=0
@@ -45,12 +39,12 @@ find ${local_decrypt_dir} -type f -print0 | xargs -0 stat --format '%Y :%y %n' |
 		while [[ "$(lsof "$n" >/dev/null 2>&1)" ]] || \
 			[[ "$(lsof "${local_decrypt_dir}/${n}" >/dev/null 2>&1)" ]] || \
 			[[ "$(lsof "${local_media_dir}/${n}" >/dev/null 2>&1)" ]]; do
-			echo "$(date "$(printenv DATE_FORMAT)") WARN: File -> ${n} in use. Retrying in 10 seconds."
+			echo "$(date "$(printenv DATE_FORMAT)") WARN: File '${n}' in use. Retrying in 10 seconds."
 			sleep 10
 		done
 
 		# Copy file to remote destination[s], retaining path
-		echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Uploading File: ${local_decrypt_dir}${filename} to: ${rclone_cloud_endpoint}${destpath}"
+		echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Uploading File: '${local_decrypt_dir}${filename}' to: '${rclone_cloud_endpoint}${destpath}'"
 
  		rclone copy ${rclone_options} "$@" "$n" "${rclone_cloud_endpoint}${destpath}" >/dev/null 2>&1
 
