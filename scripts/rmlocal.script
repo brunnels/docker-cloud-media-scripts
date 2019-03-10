@@ -6,6 +6,13 @@
 
 . "config"
 ##############################################################################
+
+# If script is already running; abort.
+if pidof -o %PPID -x "$(basename "$0")"; then
+	echo "[ $(date $(printenv DATE_FORMAT)) ] WARN: $(basename "$0") already running. Aborting."
+	exit 3
+fi
+
 oldSize=0
 newSize=0
 
@@ -28,14 +35,25 @@ do_move() {
   while [[ "$(lsof "${1}" >/dev/null 2>&1)" ]] || \
     [[ "$(lsof "${local_decrypt_dir}/${1}" >/dev/null 2>&1)" ]] || \
     [[ "$(lsof "${local_media_dir}/${1}" >/dev/null 2>&1)" ]]; do
-    echo "[ $(date $(printenv DATE_FORMAT)) ] File -> ${1} in use. Retrying in 10 seconds."
+    echo "[ $(date $(printenv DATE_FORMAT)) ] WARN: File -> ${1} in use. Retrying in 10 seconds."
     sleep 10
   done
 
-  echo "[ $(date $(printenv DATE_FORMAT)) ] Moving File: ${local_decrypt_dir}${filename} to: ${rclone_cloud_endpoint}${destpath}"
+  echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Moving File: ${local_decrypt_dir}${filename} to: ${rclone_cloud_endpoint}${destpath}"
 
   # Move file to remote destination[s], retaining path
   rclone move ${rclone_options} "$@" "${1}" "${rclone_cloud_endpoint}${destpath}" >/dev/null 2>&1
+
+#  check=$(rclone ${rclone_options} cryptcheck --one-way "${1}" "${rclone_cloud_endpoint}${destpath}" >/dev/null 2>&1 | awk '{split($0,a,": "); print a[3]}')
+
+#  # Check that all MD5SUMs match, and if so, delete local copies.
+#	if [ "$primary_checksum" = "$local_checksum" ]; then
+#		echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Removing File: ${local_decrypt_dir}${filename}"
+#		rm -f "${local_decrypt_dir}${filename}"
+#	else
+#		echo "[ $(date $(printenv DATE_FORMAT)) ] WARN: File ${local_decrypt_dir}${filename} MD5 mismatch. Removing from remote so it will recopy"
+#		rm -f "${cloud_decrypt_dir}${filename}"
+#	fi
 
   fileSize=$(du -sb "${1}" | awk '{print $1}')
   newSize=$((newSize + fileSize))
@@ -45,11 +63,11 @@ do_move() {
   if [[ "${sizeInMb}" -gt 1000 ]]; then
     if [[ "${diffSize}" -gt "1000000000" ]]; then # greater than 1 GB
       oldSize=${newSize}
-      echo "[ $(date $(printenv DATE_FORMAT)) ] $((sizeInMb / 1000)) GB uploaded"
+      echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: $((sizeInMb / 1000)) GB uploaded"
     fi
   elif [[ "${diffSize}" -gt "100000000" ]]; then # greater than 100 MB
     oldSize=${newSize}
-    echo "[ $(date $(printenv DATE_FORMAT)) ] ${sizeInMb} MB uploaded"
+    echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: ${sizeInMb} MB uploaded"
   fi
 }
 
@@ -77,7 +95,7 @@ rm_space () {
 	maxSize=$(($(printenv REMOVE_LOCAL_FILES_WHEN_SPACE_EXCEEDS_GB) * 1000 * 1000 * 1000))
 	currentSize="$(du -sb "${local_decrypt_dir}" | awk '{print $1}')"
 	if [[ "${maxSize}" -gt "${currentSize}" ]]; then
-    echo "Current size of $((${currentSize} / 1000 / 1000 / 1000)) GB has not exceeded $(printenv REMOVE_LOCAL_FILES_WHEN_SPACE_EXCEEDS_GB) GB"
+    echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Current size of $((${currentSize} / 1000 / 1000 / 1000)) GB has not exceeded $(printenv REMOVE_LOCAL_FILES_WHEN_SPACE_EXCEEDS_GB) GB"
     exit 02
 	fi
 
@@ -88,7 +106,7 @@ rm_space () {
 			if [[ "${newSize}" -gt "${freeup}" ]]; then
         spaceInGb=$((${newSize} / 1000 / 1000 / 1000))
         spaceLeft=$(($(du -sb "${local_decrypt_dir}" | awk '{print $1}') / 1000 / 1000 / 1000))
-        echo "[ $(date $(printenv DATE_FORMAT)) ] Removed ${spaceInGb} GB. Media in total ${spaceLeft} GB."
+        echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Removed ${spaceInGb} GB. Media in total ${spaceLeft} GB."
         break
 			fi
       do_move ${n}
@@ -105,7 +123,7 @@ fi
 
 check_rclone_cloud
 
-echo "Removing files based on $(printenv REMOVE_LOCAL_FILES_BASED_ON)"
+echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Removing files based on $(printenv REMOVE_LOCAL_FILES_BASED_ON)"
 
 if [[ "$(printenv REMOVE_LOCAL_FILES_BASED_ON)" = "space" ]]; then
 	rm_space
@@ -114,6 +132,6 @@ elif [[ "$(printenv REMOVE_LOCAL_FILES_BASED_ON)" = "time" ]]; then
 elif [[ "$(printenv REMOVE_LOCAL_FILES_BASED_ON)" = "instant" ]]; then
 	rm_instant
 else
-	echo "[ $(date $(printenv DATE_FORMAT)) ] no option to remove old files"
+	echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: no option to remove old files"
 	exit 02
 fi
