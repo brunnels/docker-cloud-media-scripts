@@ -64,7 +64,7 @@ mount_union () {
 
   if [[ $(ps -ef | grep "mergerfs" | grep -v "grep" | wc -l) == "0" ]]; then
     mfs_mounts="${local_decrypt_dir}:${read_decrypt_dir}:${cloud_decrypt_dir}"
-    echo "$(date "$(printenv DATE_FORMAT)") INFO: Mounting mergerfs: ${local_media_dir}"
+    echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting mergerfs: ${local_media_dir}"
     mergerfs ${mfs_options} "${mfs_mounts}" "${local_media_dir}"
   else
     echo "$(date "$(printenv DATE_FORMAT)") WARN: Union mountpoint: ${local_media_dir} already mounted."
