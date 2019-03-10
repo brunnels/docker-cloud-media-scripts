@@ -9,7 +9,7 @@
 
 # If script is already running; abort.
 if pidof -o %PPID -x "$(basename "$0")"; then
-	echo "[ $(date $(printenv DATE_FORMAT)) ] WARN: $(basename "$0") already running. Aborting."
+	echo "$(date "$(printenv DATE_FORMAT)") WARN: $(basename "$0") already running. Aborting."
 	exit 3
 fi
 
@@ -18,7 +18,7 @@ plex_token=$(printenv PLEX_TOKEN | tr -d '"' | tr -d "'")
 
 getSections() {
   if [[ -z "${plex_url}" ]]; then
-    echo "[ $(date $(printenv DATE_FORMAT)) ] ERROR: Fill in plex url and plex token to retrieve sections. Aborting..."
+    echo "$(date "$(printenv DATE_FORMAT)") ERROR: Fill in plex url and plex token to retrieve sections. Aborting..."
     exit 02
   fi
 
@@ -35,7 +35,7 @@ emptyTrash() {
   . "check"
 
   if [[ "$all_good" -eq "1" ]]; then
-    echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Library refreshing"
+    echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Library refreshing"
     curl -s -G -L "${plex_url}/library/sections/all/refresh?X-Plex-Token=${plex_token}"
     while true; do
       sleep 10
@@ -43,25 +43,25 @@ emptyTrash() {
           break
       fi
     done
-    echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Library refresh completed"
+    echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Library refresh completed"
 
     sections=$(getSections)
     if [[ -z "${sections}" ]]; then
-      echo "[ $(date $(printenv DATE_FORMAT)) ] ERROR: Could not get sections from ${plex_url} with the inserted token. Aborting..."
+      echo "$(date "$(printenv DATE_FORMAT)") ERROR: Could not get sections from ${plex_url} with the inserted token. Aborting..."
       exit 02
     fi
 
     for i in $sections
     do
       if [[ ! -z "${i}" ]]; then
-        echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Empty trash for section ${i}"
+        echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Empty trash for section ${i}"
         curl -s -X PUT -L "${plex_url}/library/sections/${i}/emptyTrash?X-Plex-Token=${plex_token}"
       fi
     done
 
     exit 0
   else
-    echo "[ $(date $(printenv DATE_FORMAT)) ] ERROR: Mount is not up after mountcheck. Aborting..."
+    echo "$(date "$(printenv DATE_FORMAT)") ERROR: Mount is not up after mountcheck. Aborting..."
     exit 02
   fi
 }

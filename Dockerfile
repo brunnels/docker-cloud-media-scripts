@@ -6,7 +6,7 @@ ENV RCLONE_ZIP="${RCLONE_RELEASE}.zip"
 ENV RCLONE_URL="https://github.com/ncw/rclone/releases/download/${RCLONE_VERSION}/${RCLONE_ZIP}"
 ENV COPY_BUFFER_SIZE="512M" \
     COPY_CHECKERS=16 \
-    DATE_FORMAT="+%F@%T" \
+    DATE_FORMAT="+%D %T" \
     PLEX_URL="" \
     PLEX_TOKEN="" \
     # Can have VERBOSE or LOG_LEVEL NOT BOTH.

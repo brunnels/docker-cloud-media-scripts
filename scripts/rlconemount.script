@@ -9,7 +9,7 @@
 
 # If script is already running; abort.
 if pidof -o %PPID -x "$(basename "$0")"; then
-	echo "[ $(date $(printenv DATE_FORMAT)) ] WARN: $(basename "$0") already running. Aborting."
+	echo "$(date "$(printenv DATE_FORMAT)") WARN: $(basename "$0") already running. Aborting."
 	exit 3
 fi
 
@@ -21,17 +21,17 @@ mount_read_gdrive () {
 	fi
 
 	if [[ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "0" ]]; then
-		echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Mounting read Google Drive: ${read_decrypt_dir}"
+		echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting read Google Drive: ${read_decrypt_dir}"
 		rclone mount ${rclone_read_mount_options} "$@" "${rclone_read_endpoint}" "${read_decrypt_dir}" &
 	else
-		echo "[ $(date $(printenv DATE_FORMAT)) ] WARN: Google Drive read mountpoint: ${read_decrypt_dir} already mounted."
+		echo "$(date "$(printenv DATE_FORMAT)") WARN: Google Drive read mountpoint: ${read_decrypt_dir} already mounted."
 	fi
 
 	sleep 5
 
 	while [[ -z "$(ls -A ${read_decrypt_dir})" ]]
 	do
-		echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Waiting for mount ${read_decrypt_dir} ..."
+		echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Waiting for mount ${read_decrypt_dir} ..."
 		sleep 10
 	done
 }
@@ -45,10 +45,10 @@ mount_gdrive () {
 
   # we're checking for true here because the rclone_read_endpoint should already be mounted
 	if [[ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "1" ]]; then
-		echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Mounting direct Google Drive: ${cloud_decrypt_dir}"
+		echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting direct Google Drive: ${cloud_decrypt_dir}"
 		rclone mount ${rclone_mount_options} "$@" "${rclone_cloud_endpoint}" "${cloud_decrypt_dir}" &
 	else
-		echo "[ $(date $(printenv DATE_FORMAT)) ] ERROR: Google Drive read mountpoint: ${rclone_mount_options} NOT already mounted. Bugging out"
+		echo "$(date "$(printenv DATE_FORMAT)") ERROR: Google Drive read mountpoint: ${rclone_mount_options} NOT already mounted. Bugging out"
 		exit 02
 	fi
 }
@@ -64,10 +64,10 @@ mount_union () {
 
   if [[ $(ps -ef | grep "mergerfs" | grep -v "grep" | wc -l) == "0" ]]; then
     mfs_mounts="${local_decrypt_dir}:${read_decrypt_dir}:${cloud_decrypt_dir}"
-    echo "[ $(date $(printenv DATE_FORMAT)) ] INFO: Mounting mergerfs: ${local_media_dir}"
+    echo "$(date "$(printenv DATE_FORMAT)") INFO: Mounting mergerfs: ${local_media_dir}"
     mergerfs ${mfs_options} "${mfs_mounts}" "${local_media_dir}"
   else
-    echo "[ $(date $(printenv DATE_FORMAT)) ] WARN: Union mountpoint: ${local_media_dir} already mounted."
+    echo "$(date "$(printenv DATE_FORMAT)") WARN: Union mountpoint: ${local_media_dir} already mounted."
   fi
 }
 
