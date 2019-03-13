@@ -20,20 +20,20 @@ mount_read_gdrive () {
 		mkdir -p "${read_decrypt_dir}"
 	fi
 
-	if [[ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "0" ]]; then
-		echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting read Google Drive: ${read_decrypt_dir}"
-		rclone mount ${rclone_read_mount_options} "$@" "${rclone_read_endpoint}" "${read_decrypt_dir}" &
+	if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
+	  echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting read Google Drive: ${read_decrypt_dir}"
+	  rclone mount ${rclone_read_mount_options} "$@" "${rclone_read_endpoint}" "${read_decrypt_dir}" &
+
+	  sleep 5
+
+    while [[ -z "$(ls -A ${read_decrypt_dir})" ]]
+    do
+      echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Waiting for mount ${read_decrypt_dir} ..."
+      sleep 10
+    done
 	else
-		echo "$(date "$(printenv DATE_FORMAT)") WARN: Google Drive read mountpoint: ${read_decrypt_dir} already mounted."
+	  echo "$(date "$(printenv DATE_FORMAT)") WARN: Google Drive read mountpoint: ${read_decrypt_dir} already mounted."
 	fi
-
-	sleep 5
-
-	while [[ -z "$(ls -A ${read_decrypt_dir})" ]]
-	do
-		echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Waiting for mount ${read_decrypt_dir} ..."
-		sleep 10
-	done
 }
 
 mount_gdrive () {
@@ -43,14 +43,13 @@ mount_gdrive () {
 		mkdir -p "${cloud_decrypt_dir}"
 	fi
 
-  # we're checking for true here because the rclone_read_endpoint should already be mounted
-	if [[ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "1" ]]; then
-		echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting direct Google Drive: ${cloud_decrypt_dir}"
-		rclone mount ${rclone_mount_options} "$@" "${rclone_cloud_endpoint}" "${cloud_decrypt_dir}" &
-	else
-		echo "$(date "$(printenv DATE_FORMAT)") ERROR: Google Drive read mountpoint: ${rclone_mount_options} NOT already mounted. Bugging out"
+	if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
+	  echo "$(date "$(printenv DATE_FORMAT)") ERROR: Google Drive read mountpoint: ${rclone_mount_options} NOT already mounted. Bugging out"
 		exit 02
-	fi
+  else
+    echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting direct Google Drive: ${cloud_decrypt_dir}"
+		rclone mount ${rclone_mount_options} "$@" "${rclone_cloud_endpoint}" "${cloud_decrypt_dir}" &
+  fi
 }
 
 mount_union () {
