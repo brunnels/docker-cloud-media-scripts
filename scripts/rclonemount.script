@@ -44,7 +44,7 @@ mount_gdrive () {
 	fi
 
 	if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
-	  echo "$(date "$(printenv DATE_FORMAT)") ERROR: Google Drive read mountpoint: ${rclone_mount_options} NOT already mounted. Bugging out"
+	  echo "$(date "$(printenv DATE_FORMAT)") ERROR: Google Drive read mountpoint: ${read_decrypt_dir} NOT already mounted. Bugging out"
 		exit 02
   else
     echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting direct Google Drive: ${cloud_decrypt_dir}"
