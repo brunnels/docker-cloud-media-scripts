@@ -27,7 +27,7 @@ ENV COPY_BUFFER_SIZE="512M" \
     FREEUP_ATLEAST_GB=80 \
     REMOVE_LOCAL_FILES_AFTER_DAYS=30 \
     REMOVE_EMPTY_DIR_DEPTH=1 \
-    CLOUD_UPLOAD_CRON="5 */1 * * *" \
+    CLOUD_UPLOAD_CRON="10 */1 * * *" \
     RM_DELETE_CRON="50 */1 * * *" \
     CHECKMOUNTS_CRON="*/1 * * * *" \
     S6_BEHAVIOUR_IF_STAGE2_FAILS=2 \
@@ -41,12 +41,12 @@ COPY scripts/* /usr/local/bin/
 COPY root /
 
 RUN apk update \
- && apk add --no-cache bash bc ca-certificates coreutils curl findutils fuse openssl procps shadow tzdata unionfs-fuse unzip \
+ && apk add --no-cache bash bc ca-certificates coreutils curl findutils fuse openssl procps shadow tzdata unzip s6 s6-portable-utils \
  && sed -i 's/#user_allow_other/user_allow_other/' /etc/fuse.conf \
  && apk add mergerfs --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ --allow-untrusted \
  && OVERLAY_VERSION=$(curl -sX GET "https://api.github.com/repos/just-containers/s6-overlay/releases/latest" | awk '/tag_name/{print $4;exit}' FS='[""]') \
- && curl -fsSL "https://github.com/just-containers/s6-overlay/releases/download/${OVERLAY_VERSION}/s6-overlay-amd64.tar.gz" -o /tmp/s6-overlay.tar.gz \
- && tar xfz /tmp/s6-overlay.tar.gz -C / \
+ && curl -fsSL "https://github.com/just-containers/s6-overlay/releases/download/${OVERLAY_VERSION}/s6-overlay-nobin.tar.gz" -o /tmp/s6-overlay.tar.gz \
+ && tar -C / -xzf /tmp/s6-overlay.tar.gz \
  && cd /tmp \
  && curl -fsSL ${RCLONE_URL} -o /tmp/${RCLONE_ZIP} \
  && unzip ${RCLONE_ZIP} \

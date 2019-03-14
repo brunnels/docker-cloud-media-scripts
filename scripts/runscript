@@ -14,8 +14,8 @@ else
   echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Starting /usr/local/bin/${1}.script"
 fi
 
-if ([[ "$(printenv USE_LOGFILES)" == "1" ]]); then
-  ${1}.script 2>&1 | tee "${log_dir}/${1}.log"
-else
-  ${1}.script 2>&1 | tee /proc/1/fd/1
+logfile=${log_dir}/${1}.log
+if ([[ "$(printenv USE_LOGFILES)" == "0" ]]); then
+  logfile="/proc/1/fd/1"
 fi
+${1}.script >> ${logfile} 2>&1
