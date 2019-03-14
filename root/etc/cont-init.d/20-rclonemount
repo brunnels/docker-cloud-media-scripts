@@ -1,5 +1,4 @@
 #!/usr/bin/with-contenv sh
 . "/usr/local/bin/config"
-umask 022
 
 exec /usr/local/bin/runscript rclonemount

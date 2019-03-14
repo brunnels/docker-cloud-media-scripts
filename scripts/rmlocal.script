@@ -1,11 +1,6 @@
 #!/bin/bash
 . "config"
 
-if [[ $(basename "$0") != "runscript" ]]; then
-	echo "$(date "$(printenv DATE_FORMAT)") ERROR: Cannot run rmlocal.script directly. Aborting."
-	exit 3
-fi
-
 oldSize=0
 newSize=0
 
@@ -108,6 +103,7 @@ rm_space () {
 	find "${local_decrypt_dir}" -mindepth $(printenv REMOVE_EMPTY_DIR_DEPTH) -type d -empty -delete
 }
 
+check_running
 check_rclone_cloud
 
 echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Removing files based on $(printenv REMOVE_LOCAL_FILES_BASED_ON)"

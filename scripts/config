@@ -9,13 +9,20 @@ rclone_unmount () {
 
   fusermount -uz "${1}"
 
-  while [["$(ls -A ${1})" ]]
+  while [[ "$(ls -A ${1})" ]]
   do
     echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Waiting for unmount of ${1} ..."
     sleep 1
   done
 }
 
+check_running () {
+  parent=$(ps $PPID | tail -n 1 | awk "{print \$6}")
+  if [[ ${parent} != "/usr/local/bin/runscript" ]]; then
+    echo "$(date "$(printenv DATE_FORMAT)") ERROR: Cannot run $(basename "$0") directly. Called from ${parent}. Aborting."
+    exit 3
+  fi
+}
 check_rclone_read () {
 	if [[ ! "${rclone_read_endpoint}" == *: ]]; then
 		echo "$(date "$(printenv DATE_FORMAT)") ERROR: Missing colon (:) in RCLONE_READ_ENDPOINT (${rclone_read_endpoint})"

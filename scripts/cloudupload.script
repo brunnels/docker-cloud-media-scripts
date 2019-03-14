@@ -1,11 +1,7 @@
 #!/bin/bash
 . "config"
 
-if [[ $(basename "$0") != "runscript" ]]; then
-	echo "$(date "$(printenv DATE_FORMAT)") ERROR: Cannot run cloudupload.script directly. Aborting."
-	exit 3
-fi
-
+check_running
 check_rclone_cloud
 
 newSize=0

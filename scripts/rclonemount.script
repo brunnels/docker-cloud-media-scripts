@@ -1,11 +1,6 @@
 #!/bin/bash
 . "config"
 
-if [[ $(basename "$0") != "runscript" ]]; then
-	echo "$(date "$(printenv DATE_FORMAT)") ERROR: Cannot run rclonemount.script directly. Aborting."
-	exit 3
-fi
-
 mount_read_gdrive () {
 	check_rclone_read
 
@@ -88,6 +83,7 @@ precache () {
 
 ###############################################################################
 
+check_running
 mount_read_gdrive
 mount_gdrive
 mount_union
