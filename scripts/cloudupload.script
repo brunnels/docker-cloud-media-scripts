@@ -1,11 +1,10 @@
 #!/bin/bash
-###############################################################################
-# CONFIGURATION
-###############################################################################
-# shellcheck source=config
-
 . "config"
-##############################################################################
+
+if [[ $(basename "$0") != "runscript" ]]; then
+	echo "$(date "$(printenv DATE_FORMAT)") ERROR: Cannot run cloudupload.script directly. Aborting."
+	exit 3
+fi
 
 check_rclone_cloud
 

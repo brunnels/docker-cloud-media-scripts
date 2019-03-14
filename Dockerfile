@@ -7,6 +7,8 @@ ENV RCLONE_URL="https://github.com/ncw/rclone/releases/download/${RCLONE_VERSION
 ENV COPY_BUFFER_SIZE="512M" \
     COPY_CHECKERS=16 \
     DATE_FORMAT="+%Y/%m/%d %T" \
+    # if USE_LOGFILES=0 everything goes to docker container log
+    USE_LOGFILES=0 \
     PLEX_URL="" \
     PLEX_TOKEN="" \
     # Can have VERBOSE or LOG_LEVEL NOT BOTH.
@@ -25,8 +27,9 @@ ENV COPY_BUFFER_SIZE="512M" \
     FREEUP_ATLEAST_GB=80 \
     REMOVE_LOCAL_FILES_AFTER_DAYS=30 \
     REMOVE_EMPTY_DIR_DEPTH=1 \
-    CLOUDUPLOADTIME="5 */1 * * *" \
-    RMDELETETIME="50 */1 * * *" \
+    CLOUD_UPLOAD_CRON="5 */1 * * *" \
+    RM_DELETE_CRON="50 */1 * * *" \
+    CHECKMOUNTS_CRON="*/1 * * * *" \
     S6_BEHAVIOUR_IF_STAGE2_FAILS=2 \
     S6_KEEP_ENV=1 \
     USER_NAME=nobody \
@@ -34,7 +37,6 @@ ENV COPY_BUFFER_SIZE="512M" \
     PGID=1000 \
     UMASK=000
 
-COPY setup/* /usr/local/bin/
 COPY scripts/* /usr/local/bin/
 COPY root /
 

@@ -3,11 +3,6 @@ PUID=${PUID:-99}
 PGID=${PGID:-100}
 UMASK=${UMASK:-000}
 
-rclonemount_command="rclonemount"
-
-cloud_upload_time=$(printenv CLOUDUPLOADTIME)
-rm_delete_time=$(printenv RMDELETETIME)
-
 log_dir="/log"
 cron_log="/${log_dir}/cron.log"
 config_dir="/config"

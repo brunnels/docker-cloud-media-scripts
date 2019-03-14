@@ -1,15 +1,8 @@
 #!/bin/bash
-###############################################################################
-# CONFIGURATION
-###############################################################################
-# shellcheck source=config
-
 . "config"
-##############################################################################
 
-# If script is already running; abort.
-if pidof -o %PPID -x "$(basename "$0")"; then
-	echo "$(date "$(printenv DATE_FORMAT)") WARN: $(basename "$0") already running. Aborting."
+if [[ $(basename "$0") != "runscript" ]]; then
+	echo "$(date "$(printenv DATE_FORMAT)") ERROR: Cannot run emptytrash.script directly. Aborting."
 	exit 3
 fi
 

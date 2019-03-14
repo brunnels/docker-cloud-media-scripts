@@ -1,8 +1,6 @@
 #!/usr/bin/with-contenv sh
-. "/usr/local/bin/variables"
+. "/usr/local/bin/config"
 
-# unmount fuse
-fusermount -uz "${read_decrypt_dir}"
-fusermount -uz "${cloud_decrypt_dir}"
-fusermount -uz "${local_decrypt_dir}"
-fusermount -uz "${local_media_dir}"
+rclone_unmount ${read_decrypt_dir}
+rclone_unmount ${cloud_decrypt_dir}
+rclone_unmount ${local_media_dir}

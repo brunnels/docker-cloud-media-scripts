@@ -1,15 +1,8 @@
 #!/bin/bash
-###############################################################################
-# CONFIGURATION
-###############################################################################
-# shellcheck source=config
-
 . "config"
-##############################################################################
 
-# If script is already running; abort.
-if pidof -o %PPID -x "$(basename "$0")"; then
-	echo "$(date "$(printenv DATE_FORMAT)") WARN: $(basename "$0") already running. Aborting."
+if [[ $(basename "$0") != "runscript" ]]; then
+	echo "$(date "$(printenv DATE_FORMAT)") ERROR: Cannot run rclonemount.script directly. Aborting."
 	exit 3
 fi
 
@@ -73,8 +66,15 @@ mount_union () {
 install_cron () {
 	#Output environmental variables for cron
 	env >> /etc/environment
-	echo "${cloud_upload_time} cloudupload >> ${cron_log} 2>&1" >> /etc/crontabs/root
-	echo "${rm_delete_time} rmlocal >> ${cron_log} 2>&1" >> /etc/crontabs/root
+  if ([[ "$(printenv USE_LOGFILES)" == "1" ]]); then
+    echo "$(printenv CLOUD_UPLOAD_CRON) /usr/local/bin/runscript cloudupload >> ${cron_log} 2>&1" >> /etc/crontabs/root
+    echo "$(printenv RM_DELETE_CRON) /usr/local/bin/runscript rmlocal >> ${cron_log} 2>&1" >> /etc/crontabs/root
+    echo "$(printenv CHECKMOUNTS_CRON) /usr/local/bin/runscript checkmounts >> ${cron_log} 2>&1" >> /etc/crontabs/root
+  else
+    echo "$(printenv CLOUD_UPLOAD_CRON) /usr/local/bin/runscript cloudupload >> /proc/1/fd/1 2>&1" >> /etc/crontabs/root
+    echo "$(printenv RM_DELETE_CRON) /usr/local/bin/runscript rmlocal >> /proc/1/fd/1 2>&1" >> /etc/crontabs/root
+    echo "$(printenv CHECKMOUNTS_CRON) /usr/local/bin/runscript checkmounts >> /proc/1/fd/1 2>&1" >> /etc/crontabs/root
+  fi
 	crond -b
 }
 

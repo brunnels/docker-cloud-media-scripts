@@ -1,5 +1,5 @@
 #!/usr/bin/with-contenv sh
-. "/usr/local/bin/variables"
+. "/usr/local/bin/config"
 
 if [[ ! "$(id -u $(printenv USER_NAME))" -eq "${PUID}" ]]; then usermod -o -u ${PUID} $(printenv USER_NAME) ; fi
 if [[ ! "$(id -g $(printenv USER_NAME))" -eq "${PUID}" ]]; then groupmod -o -g ${PGID} $(printenv USER_NAME) ; fi
@@ -52,7 +52,3 @@ chmod a+r /etc/fuse.conf
 chown -R $(printenv USER_NAME):$(printenv USER_NAME) \
   /config \
   /usr/local/bin/*
-
-
-
-

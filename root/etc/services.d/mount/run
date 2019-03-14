@@ -1,6 +1,5 @@
 #!/usr/bin/with-contenv sh
-. "/usr/local/bin/variables"
+. "/usr/local/bin/config"
 umask 022
 
-echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Starting /usr/local/bin/${rclonemount_command}"
-exec ${rclonemount_command}
+exec /usr/local/bin/runscript rclonemount

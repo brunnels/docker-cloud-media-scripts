@@ -1,6 +1,21 @@
 #!/bin/bash
 . "variables"
 
+rclone_unmount () {
+  if [[ -z "${1}" ]]; then
+    echo "$(date "$(printenv DATE_FORMAT)") Error: unmount path required"
+    exit 3
+  fi
+
+  fusermount -uz "${1}"
+
+  while [["$(ls -A ${1})" ]]
+  do
+    echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Waiting for unmount of ${1} ..."
+    sleep 1
+  done
+}
+
 check_rclone_read () {
 	if [[ ! "${rclone_read_endpoint}" == *: ]]; then
 		echo "$(date "$(printenv DATE_FORMAT)") ERROR: Missing colon (:) in RCLONE_READ_ENDPOINT (${rclone_read_endpoint})"
@@ -31,4 +46,3 @@ check_rclone_cloud () {
 		exit 02
 	fi
 }
-

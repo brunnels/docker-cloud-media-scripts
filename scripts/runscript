@@ -1,0 +1,21 @@
+#!/bin/bash
+. "config"
+
+if [[ -z "${1}" ]]; then
+  echo "$(date "$(printenv DATE_FORMAT)") Error: Script name required when calling $(basename "$0")"
+  exit 3
+fi
+
+# If script is already running; abort.
+if [[ $(pidof -o %PPID -x "${1}.script") ]]; then
+	echo "$(date "$(printenv DATE_FORMAT)") WARN: /usr/local/bin/${1}.script already running. Aborting."
+	exit 3
+else
+  echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Starting /usr/local/bin/${1}.script"
+fi
+
+if ([[ "$(printenv USE_LOGFILES)" == "1" ]]); then
+  ${1}.script 2>&1 | tee "${log_dir}/${1}.log"
+else
+  ${1}.script 2>&1 | tee /proc/1/fd/1
+fi
