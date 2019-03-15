@@ -4,22 +4,22 @@
 check_running
 
 if [[ $(ps -ef | grep "rclonemount" | grep -v "grep" | wc -l) != "0" ]]; then
-  echo "$(date "$(printenv DATE_FORMAT)") NOTICE: rclonemount script still running.  Exiting."
+  log "WARN" "rclonemount script still running.  Exiting."
   exit 3
 fi
 
 if [[ -z "$(ls -A ${read_decrypt_dir})" ]] || [[ $(ps -ef | grep "mergerfs" | grep -v "grep" | wc -l) == "0" ]]; then
-  echo "$(date "$(printenv DATE_FORMAT)") WARN: Mount has dropped. Remount in progress..."
+  log "WARN" "One of our mounts has dropped. Remount all in progress..."
   rclone_unmount ${read_decrypt_dir}
   rclone_unmount ${cloud_decrypt_dir}
   rclone_unmount ${local_media_dir}
 
-  echo "$(date "$(printenv DATE_FORMAT)") WARN: Unmounted successfully"
+  log "WARN" "Unmount all mounts succeeded"
   preCacheVal=$(printenv RCLONE_PRECACHE)
   export RCLONE_PRECACHE=0
   /usr/local/bin/runscript rclonemount
   export RCLONE_PRECACHE=preCacheVal
-  echo "$(date "$(printenv DATE_FORMAT)") WARN: Remount completed successfully"
+  log "WARN" "Mount all succeeded"
 else
-  echo "$(date "$(printenv DATE_FORMAT)") NOTICE: All mounts are up"
+  log "DEBUG" "All mounts are up"
 fi

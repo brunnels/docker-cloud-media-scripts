@@ -2,16 +2,16 @@
 . "config"
 
 if [[ -z "${1}" ]]; then
-  echo "$(date "$(printenv DATE_FORMAT)") Error: Script name required when calling $(basename "$0")"
+  log "ERROR" "Script name required when calling $(basename "$0")"
   exit 3
 fi
 
 # If script is already running; abort.
 if [[ $(pidof -o %PPID -x "${1}.script") ]]; then
-	echo "$(date "$(printenv DATE_FORMAT)") WARN: /usr/local/bin/${1}.script already running. Aborting."
+	log "DEBUG" "/usr/local/bin/${1}.script already running. Aborting."
 	exit 3
 else
-  echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Starting /usr/local/bin/${1}.script"
+  log "DEBUG" "Starting /usr/local/bin/${1}.script"
 fi
 
 logfile=${log_dir}/${1}.log

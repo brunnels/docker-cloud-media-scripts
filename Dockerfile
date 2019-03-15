@@ -7,6 +7,7 @@ ENV RCLONE_URL="https://github.com/ncw/rclone/releases/download/${RCLONE_VERSION
 ENV COPY_BUFFER_SIZE="512M" \
     COPY_CHECKERS=16 \
     DATE_FORMAT="+%Y/%m/%d %T" \
+    DEBUG_ENABLED=0 \
     # if USE_LOGFILES=0 everything goes to docker container log
     USE_LOGFILES=0 \
     PLEX_URL="" \
@@ -54,16 +55,13 @@ RUN apk update \
  && cp -rf ${RCLONE_RELEASE}/rclone /usr/bin/rclone \
  && rm -rf ${RCLONE_ZIP}\
  && rm -rf ${RCLONE_RELEASE} \
- && apk del \
-    curl \
-    unzip \
-    wget \
+ && apk del unzip \
  && chmod a+x /usr/local/bin/* \
  && rm -rf /tmp/*
 
 VOLUME /config /read-decrypt /cloud-decrypt /local-decrypt /local-media /log
 
-RUN chmod -R 777 /log
+EXPOSE 5572
 
 WORKDIR /
 

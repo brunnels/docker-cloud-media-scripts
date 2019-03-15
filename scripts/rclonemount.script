@@ -9,18 +9,18 @@ mount_read_gdrive () {
 	fi
 
 	if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
-	  echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting read Google Drive: ${read_decrypt_dir}"
+	  log "NOTICE" "Mounting read Google Drive: ${read_decrypt_dir}"
 	  rclone mount ${rclone_read_mount_options} "$@" "${rclone_read_endpoint}" "${read_decrypt_dir}" &
 
 	  sleep 5
 
     while [[ -z "$(ls -A ${read_decrypt_dir})" ]]
     do
-      echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Waiting for mount ${read_decrypt_dir} ..."
+      log "WARN" "Waiting for mount ${read_decrypt_dir} ..."
       sleep 10
     done
 	else
-	  echo "$(date "$(printenv DATE_FORMAT)") WARN: Google Drive read mountpoint: ${read_decrypt_dir} already mounted."
+	  log "WARN" "Google Drive read mountpoint: ${read_decrypt_dir} already mounted."
 	fi
 }
 
@@ -32,10 +32,10 @@ mount_gdrive () {
 	fi
 
 	if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
-	  echo "$(date "$(printenv DATE_FORMAT)") ERROR: Google Drive read mountpoint: ${read_decrypt_dir} NOT already mounted. Bugging out"
+	  log "ERROR" "Google Drive read mountpoint: ${read_decrypt_dir} NOT already mounted. Bugging out"
 		exit 02
   else
-    echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting direct Google Drive: ${cloud_decrypt_dir}"
+    log "NOTICE" "Mounting direct Google Drive: ${cloud_decrypt_dir}"
 		rclone mount ${rclone_mount_options} "$@" "${rclone_cloud_endpoint}" "${cloud_decrypt_dir}" &
   fi
 }
@@ -51,14 +51,14 @@ mount_union () {
 
   if [[ $(ps -ef | grep "mergerfs" | grep -v "grep" | wc -l) == "0" ]]; then
     mfs_mounts="${local_decrypt_dir}:${read_decrypt_dir}:${cloud_decrypt_dir}"
-    echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Mounting mergerfs: ${local_media_dir}"
+    log "NOTICE" "Mounting mergerfs: ${local_media_dir}"
     mergerfs ${mfs_options} "${mfs_mounts}" "${local_media_dir}"
   else
-    echo "$(date "$(printenv DATE_FORMAT)") WARN: mergerfs mountpoint: ${local_media_dir} already mounted."
+    log "WARN" "mergerfs mountpoint: ${local_media_dir} already mounted."
   fi
 }
 
-install_cron () {
+set_crontab () {
 	#Output environmental variables for cron
 	env >> /etc/environment
   if ([[ "$(printenv USE_LOGFILES)" == "0" ]]); then
@@ -67,14 +67,13 @@ install_cron () {
   echo "$(printenv CLOUD_UPLOAD_CRON) /usr/local/bin/runscript cloudupload >> ${cron_log} 2>&1" >> /etc/crontabs/root
   echo "$(printenv RM_DELETE_CRON) /usr/local/bin/runscript rmlocal >> ${cron_log} 2>&1" >> /etc/crontabs/root
   echo "$(printenv CHECKMOUNTS_CRON) /usr/local/bin/runscript checkmounts >> ${cron_log} 2>&1" >> /etc/crontabs/root
-	crond -b
 }
 
 precache () {
 	if ([[ "$(printenv RCLONE_PRECACHE)" == "1" ]]); then
-	  echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Starting VFS pre-cache"
+	  log "NOTICE" "Starting VFS pre-cache"
 		rclone rc vfs/refresh recursive=true >/dev/null 2>&1
-		echo "$(date "$(printenv DATE_FORMAT)") NOTICE: VFS pre-cache complete"
+		log "NOTICE" "VFS pre-cache complete"
 	fi
 }
 
@@ -84,6 +83,5 @@ check_running
 mount_read_gdrive
 mount_gdrive
 mount_union
+set_crontab
 precache
-install_cron
-
