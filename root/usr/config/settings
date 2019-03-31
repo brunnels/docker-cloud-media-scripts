@@ -1,10 +1,10 @@
 #!/bin/bash
+
 PUID=${PUID:-99}
 PGID=${PGID:-100}
 UMASK=${UMASK:-000}
+USER_NAME=${USER_NAME:-nobody}
 
-log_dir="/log"
-cron_log="/${log_dir}/cron.log"
 config_dir="/config"
 secrets_dir="/secrets"
 # gcloud mount point
@@ -18,38 +18,38 @@ local_media_dir="/local-media"
 
 rclone_exclude_file="/${config_dir}/exclude.txt"
 if [[ ! -f "${rclone_exclude_file}" ]]; then
-  touch ${rclone_exclude_file}
+    touch ${rclone_exclude_file}
 fi
 
 rclone_config="--config=/${config_dir}/rclone.conf"
 rclone_options="${rclone_config} --buffer-size $(printenv COPY_BUFFER_SIZE) --checkers $(printenv COPY_CHECKERS)"
 rclone_mount_options="${rclone_options} --allow-non-empty --allow-other --uid $(printenv PUID) --gid $(printenv PGID) --umask $(printenv UMASK)"
 
-if [[ "$(printenv RCLONE_CLOUD_OPTIONS)" != "" ]]; then
-  rclone_mount_options="${rclone_mount_options} $(printenv RCLONE_CLOUD_OPTIONS)"
+if [[ "$(printenv CLOUD_DECRYPT_OPTIONS)" != "" ]]; then
+    rclone_mount_options="${rclone_mount_options} $(printenv CLOUD_DECRYPT_OPTIONS)"
 fi
 
 if [[ "$(printenv RCLONE_REMOTE_CONTROL)" != "0" ]]; then
-  rclone_mount_options_rc="${rclone_mount_options} --rc"
+    rclone_mount_options_rc="${rclone_mount_options} --rc"
 fi
 
 # can't set verbose and loglevel together
 if [[ "$(printenv RCLONE_VERBOSE)" != "0" ]]; then
-  rclone_mount_options="${rclone_mount_options} --verbose"
+    rclone_mount_options="${rclone_mount_options} --verbose"
 elif [[ "$(printenv RCLONE_LOG_LEVEL)" != "" ]]; then
-  rclone_mount_options="${rclone_mount_options} --log-level $(printenv RCLONE_LOG_LEVEL)"
+    rclone_mount_options="${rclone_mount_options} --log-level $(printenv RCLONE_LOG_LEVEL)"
 fi
 
-rclone_read_mount_options="${rclone_mount_options} --read-only"
-if [[ "$(printenv RCLONE_READ_OPTIONS)" != "" ]]; then
-  rclone_read_mount_options="${rclone_read_mount_options} $(printenv RCLONE_READ_OPTIONS)"
+read_decrypt_mount_options="${rclone_mount_options} --read-only"
+if [[ "$(printenv READ_DECRYPT_OPTIONS)" != "" ]]; then
+    read_decrypt_mount_options="${read_decrypt_mount_options} $(printenv READ_DECRYPT_OPTIONS)"
 fi
 
 mfs_options=""
 if [[ "$(printenv MERGERFS_OPTIONS)" != "" ]]; then
-  mfs_options="-o $(printenv MERGERFS_OPTIONS)"
+    mfs_options="-o $(printenv MERGERFS_OPTIONS)"
 fi
 
-rclone_cloud_endpoint=$(printenv RCLONE_CLOUD_ENDPOINT | tr -d '"' | tr -d "'")
-rclone_local_endpoint=$(printenv RCLONE_LOCAL_ENDPOINT | tr -d '"' | tr -d "'")
-rclone_read_endpoint=$(printenv RCLONE_CLOUD_ENDPOINT | tr -d '"' | tr -d "'")
+cloud_decrypt_endpoint=$(printenv CLOUD_DECRYPT_ENDPOINT | tr -d '"' | tr -d "'")
+local_decrypt_endpoint=$(printenv LOCAL_DECRYPT_ENDPOINT | tr -d '"' | tr -d "'")
+read_decrypt_endpoint=$(printenv CLOUD_DECRYPT_ENDPOINT | tr -d '"' | tr -d "'")

@@ -1,4 +1,7 @@
-#!/usr/bin/with-contenv sh
-umask 022
-
-exec crond -f -d 8 >/dev/null 2>&1
+#!/usr/bin/with-contenv bash
+. "/usr/local/bin/util"
+/bin/s6-svwait -U /var/run/s6/services/read_decrypt
+/bin/s6-svwait -U /var/run/s6/services/cloud_decrypt
+/bin/s6-svwait -U /var/run/s6/services/local_media
+log "INFO" "Starting crond"
+crond -f

@@ -1,0 +1,131 @@
+#!/bin/bash
+
+. "util"
+
+oldSize=0
+newSize=0
+
+do_move() {
+    log "DEBUG" "Removing files based on $(printenv REMOVE_LOCAL_FILES_BASED_ON)"
+
+    # Find the pathname relative to the root of your remote and store filename
+    filename="$(echo "${1}" | sed -e s@"${local_decrypt_dir}"@@)"
+    destpath="$(dirname "${1}" | sed -e s@"${local_decrypt_dir}"@@)"
+
+    # Skip hidden or partial files.
+    case "${1}" in
+        (*.partial~) continue ;;
+        (*_HIDDEN~) continue ;;
+        (*.QTFS) continue ;;
+        (*.unionfs-fuse*) continue ;;
+        (*.DS_STORE) continue ;;
+        (*.download*) continue ;;
+    esac
+
+    # If file is opened by another process, wait until it isn't.
+    while [[ "$(lsof "${1}" > /dev/null 2>&1)" ]] || \
+ [[ "$(lsof "${local_decrypt_dir}/${1}" > /dev/null 2>&1)" ]] || \
+ [[ "$(lsof "${local_media_dir}/${1}" > /dev/null 2>&1)" ]]; do
+        log "WARN" "File '${1}' in use. Retrying in 10 seconds."
+        sleep 10
+    done
+
+    log "NOTICE" "Moving File: '${local_decrypt_dir}${filename}' to: '${cloud_decrypt_endpoint}${destpath}'"
+
+    # Move file to remote destination[s], retaining path
+    rclone move ${rclone_options} "$@" "${1}" "${cloud_decrypt_endpoint}${destpath}" > /dev/null 2>&1
+
+    #  check=$(rclone ${rclone_options} cryptcheck --one-way "${1}" "${rclone_cloud_endpoint}${destpath}" >/dev/null 2>&1 | awk '{split($0,a,": "); print a[3]}')
+
+    #  # Check that all MD5SUMs match, and if so, delete local copies.
+    #	if [ "$primary_checksum" = "$local_checksum" ]; then
+    #		echo "$(date "$(printenv DATE_FORMAT)") NOTICE: Removing File: ${local_decrypt_dir}${filename}"
+    #		rm -f "${local_decrypt_dir}${filename}"
+    #	else
+    #		echo "$(date "$(printenv DATE_FORMAT)") WARN: File ${local_decrypt_dir}${filename} MD5 mismatch. Removing from remote so it will recopy"
+    #		rm -f "${cloud_decrypt_dir}${filename}"
+    #	fi
+
+    fileSize=$(du -sb "${1}" | awk '{print $1}')
+    newSize=$((newSize + fileSize))
+    sizeInMb=$((newSize / 1000 / 1000))
+    diffSize=$((newSize - oldSize))
+
+    if [[ "${sizeInMb}" -gt 1000 ]]; then
+        if [[ "${diffSize}" -gt "1000000000" ]]; then
+        # greater than 1 GB
+            oldSize=${newSize}
+            log "NOTICE" "$((sizeInMb / 1000)) GB removed"
+        fi
+    elif [[ "${diffSize}" -gt "100000000" ]]; then
+    # greater than 100 MB
+        oldSize=${newSize}
+        log "NOTICE" "${sizeInMb} MB removed"
+    fi
+}
+
+rm_time() {
+    log "DEBUG" "Removing files based on $(printenv REMOVE_LOCAL_FILES_BASED_ON)"
+
+    # Generate filelist and iterate through it...
+    find "${local_decrypt_dir}" -type f -mtime +$(printenv REMOVE_LOCAL_FILES_AFTER_DAYS) |
+    while read -r n; do
+        do_move ${n}
+    done
+
+    find "${local_decrypt_dir}" -mindepth $(printenv REMOVE_EMPTY_DIR_DEPTH) -type d -empty -delete
+}
+
+rm_instant() {
+    log "DEBUG" "Removing files based on $(printenv REMOVE_LOCAL_FILES_BASED_ON)"
+
+    # Generate filelist and iterate through it...
+    find "${local_decrypt_dir}" -type f |
+    while read -r n; do
+        do_move ${n}
+    done
+
+    find "${local_decrypt_dir}" -mindepth $(printenv REMOVE_EMPTY_DIR_DEPTH) -type d -empty -delete
+}
+
+rm_space() {
+    log "DEBUG" "Removing files based on $(printenv REMOVE_LOCAL_FILES_BASED_ON)"
+
+    maxSize=$(($(printenv REMOVE_LOCAL_FILES_WHEN_SPACE_EXCEEDS_GB) * 1000 * 1000 * 1000))
+    currentSize="$(du -sb "${local_decrypt_dir}" | awk '{print $1}')"
+    if [[ "${maxSize}" -gt "${currentSize}" ]]; then
+        log "NOTICE" "Current size of $((${currentSize} / 1000 / 1000 / 1000)) GB has not exceeded $(printenv REMOVE_LOCAL_FILES_WHEN_SPACE_EXCEEDS_GB) GB"
+        exit 02
+    fi
+
+    freeup=$(($(printenv FREEUP_ATLEAST_GB) * 1000 * 1000 * 1000))
+
+    find "${local_decrypt_dir}" -type f -print0 | xargs -0 stat --format '%Y :%y %n' | cut -d: -f2- | sort -n | awk '{$1=$2=$3=""; print $0}' |
+    while read -r n; do
+        if [[ "${newSize}" -gt "${freeup}" ]]; then
+            spaceInGb=$((${newSize} / 1000 / 1000 / 1000))
+            spaceLeft=$(($(du -sb "${local_decrypt_dir}" | awk '{print $1}') / 1000 / 1000 / 1000))
+            log "NOTICE" "Removed ${spaceInGb} GB. Media in total ${spaceLeft} GB."
+            break
+        fi
+        do_move ${n}
+    done
+
+    find "${local_decrypt_dir}" -mindepth $(printenv REMOVE_EMPTY_DIR_DEPTH) -type d -empty -delete
+}
+
+check_running
+check_rclone_cloud
+
+
+
+if [[ "$(printenv REMOVE_LOCAL_FILES_BASED_ON)" = "space" ]]; then
+    rm_space
+elif [[ "$(printenv REMOVE_LOCAL_FILES_BASED_ON)" = "time" ]]; then
+    rm_time
+elif [[ "$(printenv REMOVE_LOCAL_FILES_BASED_ON)" = "instant" ]]; then
+    rm_instant
+else
+    log "DEBUG" "no option to remove old files"
+    exit 02
+fi

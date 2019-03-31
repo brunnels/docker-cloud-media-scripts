@@ -1,0 +1,63 @@
+#!/bin/bash
+. "/usr/config/settings"
+
+log() {
+    if [[ -z "${1}" ]]; then
+        log "ERROR" "log level required"
+        exit 3
+    fi
+
+    if [[ -z "${2}" ]]; then
+        log "ERROR" "log message required"
+        exit 3
+    fi
+
+    if [[ "$(printenv DEBUG_ENABLED)" == "1" ]] || [[ ${1} != "DEBUG" ]]; then
+        echo "$(date "$(printenv DATE_FORMAT)") ${1}: ${2}"
+    fi
+}
+
+rclone_unmount() {
+    if [[ -z "${1}" ]]; then
+        log "ERROR" "unmount path required"
+        exit 3
+    fi
+
+    fusermount -u -z "${1}"
+
+    while [[ "$(ls -A ${1})" ]]
+    do
+        log "WARN" "Waiting for unmount of ${1} ..."
+        sleep 1
+    done
+}
+
+check_read_decrypt() {
+    if [[ ! "${read_decrypt_endpoint}" == *: ]]; then
+        log "ERROR" "Missing colon (:) in CLOUD_DECRYPT_ENDPOINT (${read_decrypt_endpoint})"
+        sleep 5000
+        exit 02
+    fi
+
+    if [[ "$(rclone listremotes ${rclone_config} | grep "${read_decrypt_endpoint}" | wc -l)" == "0" ]]; then
+        log "ERROR" "CLOUD_DECRYPT_ENDPOINT (${read_decrypt_endpoint}) endpoint has not been created within rclone"
+        log "ERROR" "ERROR: Run 'docker exec -ti <DOCKER_CONTAINER> rclone_setup'"
+        sleep 5000
+        exit 02
+    fi
+}
+
+check_cloud_decrypt() {
+    if [[ ! "${cloud_decrypt_endpoint}" == *: ]]; then
+        log "ERROR" "Missing colon (:) in CLOUD_DECRYPT_ENDPOINT (${cloud_decrypt_endpoint})"
+        sleep 5000
+        exit 02
+    fi
+
+    if [[ "$(rclone listremotes ${rclone_config} | grep "${cloud_decrypt_endpoint}" | wc -l)" == "0" ]]; then
+        log "ERROR" "CLOUD_DECRYPT_ENDPOINT (${cloud_decrypt_endpoint}) endpoint has not been created within rclone"
+        log "ERROR" "Run 'docker exec -ti <DOCKER_CONTAINER> rclone_setup'"
+        sleep 5000
+        exit 02
+    fi
+}

@@ -1,4 +1,0 @@
-#!/usr/bin/with-contenv sh
-. "/usr/local/bin/config"
-
-exec /usr/local/bin/runscript rclonemount

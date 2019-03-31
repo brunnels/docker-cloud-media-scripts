@@ -1,0 +1,58 @@
+#!/usr/bin/with-contenv bash
+. "/usr/local/bin/util"
+/bin/s6-svwait -U /var/run/s6/services/read_decrypt
+/bin/s6-svwait -U /var/run/s6/services/cloud_decrypt
+
+log "INFO" "Starting local_media"
+
+term_handler() {
+    log "NOTICE" "local_media SIGTERM received"
+    log "NOTICE" "local_media unmounting ${local_media_dir}"
+    rclone_unmount ${local_media_dir}
+    log "NOTICE" "local_media sending SIGTERM to child pid"
+    s6-svc -t /var/run/s6/services/cloud_decrypt
+    s6-svc -t /var/run/s6/services/read_decrypt
+    kill -SIGTERM ${PID} >/dev/null 2>&1
+    log "NOTICE" "local_media exiting"
+    exit 1
+}
+
+trap term_handler SIGTERM
+
+if [[ ! -d "${local_media_dir}" ]]; then
+    mkdir -p "${local_media_dir}"
+    chown ${PUID}:${PGID} ${local_media_dir}
+fi
+
+if [[ ! -d "${local_decrypt_dir}" ]]; then
+    mkdir -p "${local_decrypt_dir}"
+    chown ${PUID}:${PGID} ${local_decrypt_dir}
+fi
+
+if [[ $(getfattr -d "${local_media_dir}/.mergerfs" 2>/dev/null | grep "user.mergerfs.pid" | awk '{print $2}' FS='"' | wc -l) == "0" ]]; then
+    mfs_mounts="${local_decrypt_dir}:${read_decrypt_dir}:${cloud_decrypt_dir}"
+    log "NOTICE" "Mounting local_media: ${local_media_dir}"
+    mergerfs ${mfs_options} "${mfs_mounts}" "${local_media_dir}"
+    while [[ $(getfattr -d "${local_media_dir}/.mergerfs" 2>/dev/null | grep "user.mergerfs.pid" | awk '{print $2}' FS='"' | wc -l) == "0" ]]
+    do
+        log "WARN" "Waiting for mount ${local_media_dir} ..."
+        sleep 2
+    done
+    PID=$(getfattr -d "${local_media_dir}/.mergerfs" 2>/dev/null | grep "user.mergerfs.pid" | awk '{print $2}' FS='"')
+    sleep 1
+    fdmove -c 2 1 fdmove 1 3 echo >> /dev/null fdmove -c 1 2
+    while [[ -e /proc/${PID} ]]
+    do
+        sleep .6
+    done
+else
+    log "WARN" "local_media mountpoint: ${local_media_dir} already mounted."
+fi
+
+log "ERROR" "local_media script crashed"
+log "NOTICE" "local_media unmounting ${local_media_dir}"
+rclone_unmount ${local_media_dir}
+s6-svc -t /var/run/s6/services/cloud_decrypt
+s6-svc -t /var/run/s6/services/read_decrypt
+log "NOTICE" "local_media exiting"
+exit 1

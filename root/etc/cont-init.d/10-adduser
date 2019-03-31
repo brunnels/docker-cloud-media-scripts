@@ -1,54 +1,66 @@
-#!/usr/bin/with-contenv sh
-. "/usr/local/bin/config"
+#!/usr/bin/with-contenv bash
+. "/usr/local/bin/util"
 
-if [[ ! "$(id -u $(printenv USER_NAME))" -eq "${PUID}" ]]; then usermod -o -u ${PUID} $(printenv USER_NAME) ; fi
-if [[ ! "$(id -g $(printenv USER_NAME))" -eq "${PUID}" ]]; then groupmod -o -g ${PGID} $(printenv USER_NAME) ; fi
+ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+if [[ "$(getent group ${PGID} | grep -v "grep" | wc -l)" -eq "0" ]]; then
+    if [[ "$(getent group ${USER_NAME} | cut -d: -f1 | wc -l)" -eq "1" ]]; then
+        log "NOTICE" "creating group ${USER_NAME}_${PGID} with GID ${PGID}"
+        groupadd -g ${PGID} "${USER_NAME}_${PGID}"
+    else
+        log "NOTICE" "creating group ${USER_NAME} with GID ${PGID}"
+        groupadd -g ${PGID} ${USER_NAME}
+    fi
+fi
+
+if [[ "$(getent passwd ${USER_NAME} | wc -l)" -eq "0" ]]; then
+    log "NOTICE" "creating user ${USER_NAME}"
+    sed -i 's/^CREATE_MAIL_SPOOL=yes/CREATE_MAIL_SPOOL=no/' /etc/default/useradd
+    groupadd -g ${PGID} ${USER_NAME}
+    useradd -l -m -d /home/${USER_NAME} -s /bin/bash -u ${PUID} -g ${PGID} ${USER_NAME}
+else
+    mkdir -p /home/${USER_NAME}
+    usermod -s /bin/bash -L ${USER_NAME} -d /home/${USER_NAME} -u ${PUID} -g ${PGID}
+fi
+
+if [[ ! "$(id -u ${USER_NAME})" -eq "${PUID}" ]]; then
+    usermod -o -u ${PUID} ${USER_NAME};
+fi
+if [[ ! "$(id -g ${USER_NAME})" -eq "${PUID}" ]]; then
+    groupmod -o -g ${PGID} ${USER_NAME};
+fi
 
 echo "
 ---------------------------------------
-User '$(printenv USER_NAME)' GID/UID:  $(id -u $(printenv USER_NAME))/$(id -g $(printenv USER_NAME))
+User '${USER_NAME}' GID/UID:  $(id -u ${USER_NAME})/$(id -g ${USER_NAME})
 ---------------------------------------
 "
-if [[ ! -d "${log_dir}" ]]; then
-	mkdir -p "${log_dir}"
-	chown $(printenv USER_NAME):$(printenv USER_NAME) ${log_dir}
-fi
-
-if [[ -d "${secrets_dir}" ]]; then
-    cp ${secrets_dir}/* /config/
-fi
-
-if [[ ! -d "${log_dir}" ]]; then
-	mkdir -p "${log_dir}"
-	chown $(printenv USER_NAME):$(printenv USER_NAME) ${log_dir}
-fi
+#if [[ -d "${secrets_dir}" ]]; then
+#    cp ${secrets_dir}/* /config/
+#fi
 
 if [[ ! -d "${local_decrypt_dir}" ]]; then
-  mkdir -p "${local_decrypt_dir}"
-  chown $(printenv USER_NAME):$(printenv USER_NAME) ${local_decrypt_dir}
+    mkdir -p "${local_decrypt_dir}"
+    chown ${PUID}:${PGID} ${local_decrypt_dir}
 fi
 
 if [[ ! -d "${read_decrypt_dir}" ]]; then
-  mkdir -p "${read_decrypt_dir}"
-  chown $(printenv USER_NAME):$(printenv USER_NAME) ${read_decrypt_dir}
+    mkdir -p "${read_decrypt_dir}"
+    chown ${PUID}:${PGID} ${read_decrypt_dir}
 fi
 
 if [[ ! -d "${cloud_decrypt_dir}" ]]; then
-  mkdir -p "${cloud_decrypt_dir}"
-  chown $(printenv USER_NAME):$(printenv USER_NAME) ${cloud_decrypt_dir}
+    mkdir -p "${cloud_decrypt_dir}"
+    chown ${PUID}:${PGID} ${cloud_decrypt_dir}
 fi
 
 if [[ ! -d "${local_media_dir}" ]]; then
-  mkdir -p "${local_media_dir}"
-  chown $(printenv USER_NAME):$(printenv USER_NAME) ${local_media_dir}
+    mkdir -p "${local_media_dir}"
+    chown ${PUID}:${PGID} ${local_media_dir}
 fi
 
 chmod -R 777 \
-	/var/lock \
-  ${log_dir}
-
-chmod a+r /etc/fuse.conf
+ /var/lock
 
 chown -R $(printenv USER_NAME):$(printenv USER_NAME) \
-  /config \
-  /usr/local/bin/*
+ /usr/local/bin/*

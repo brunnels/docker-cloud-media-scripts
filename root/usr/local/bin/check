@@ -1,0 +1,31 @@
+#!/bin/bash
+. "util"
+
+all_good=1
+
+check_cloud_decrypt
+check_rclone_cloud
+
+if [[ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "0" ]]; then
+    log "ERROR" "rclone is not running"
+    all_good=0
+fi
+
+if [[ -z "$(ls -A ${cloud_decrypt_dir})" ]]; then
+    log "ERROR" "Waiting for ${cloud_decrypt_dir}"
+    exit 0
+fi
+
+if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
+    log "ERROR" "Waiting for ${read_decrypt_dir}"
+    exit 0
+fi
+
+if [[ $(getfattr -d "${local_media_dir}/.mergerfs" 2>/dev/null | grep "user.mergerfs.pid" | awk '{print $2}' FS='"' | wc -l) == "0" ]]; then
+    log "ERROR" "MergerFS is not running"
+    all_good=0
+fi
+
+if [[ "$all_good" -eq "1" ]]; then
+    log "DEBUG" "All checks succeeded"
+fi

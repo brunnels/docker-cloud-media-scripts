@@ -1,6 +1,0 @@
-#!/usr/bin/with-contenv sh
-. "/usr/local/bin/config"
-
-rclone_unmount ${read_decrypt_dir}
-rclone_unmount ${cloud_decrypt_dir}
-rclone_unmount ${local_media_dir}
