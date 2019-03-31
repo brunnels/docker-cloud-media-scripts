@@ -13,7 +13,7 @@ log() {
     fi
 
     if [[ "$(printenv DEBUG_ENABLED)" == "1" ]] || [[ ${1} != "DEBUG" ]]; then
-        echo "$(date "$(printenv DATE_FORMAT)") ${1}: ${2}"
+        echo "$(date "$(printenv DATE_FORMAT)") ${1}: ${2}" >/proc/1/fd/1
     fi
 }
 
