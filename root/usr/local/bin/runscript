@@ -18,5 +18,4 @@ if [[ $(pidof -o %PPID -x "${1}.script") ]]; then
 else
     log "DEBUG" "Starting /usr/local/bin/${1}.script"
 fi
-
-echo $(xargs -0 s6-setuidgid ${runas} sh -c "${1}.script")
+${1}.script
