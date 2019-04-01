@@ -4,4 +4,4 @@
 /bin/s6-svwait -U /var/run/s6/services/cloud_decrypt
 /bin/s6-svwait -U /var/run/s6/services/local_media
 log "INFO" "Starting crond"
-crond -f
+crond -f >/dev/null 2>&1

@@ -3,6 +3,5 @@
 
 #Output environmental variables for cron
 env >> /etc/environment
-echo "$(printenv CLOUD_UPLOAD_CRON) /usr/local/bin/runscript cloudupload ${USER_NAME}" > /etc/crontabs/root
-#echo "$(printenv RM_DELETE_CRON) /usr/local/bin/runscript rmlocal" >> /etc/crontabs/root
-
+echo "$(printenv CLOUD_UPLOAD_CRON) /usr/local/bin/runscript cloudupload > /proc/1/fd/1 2> /proc/1/fd/2" > /etc/crontabs/root
+echo "$(printenv RM_DELETE_CRON) /usr/local/bin/runscript rmlocal > /proc/1/fd/1 2> /proc/1/fd/2" >> /etc/crontabs/root
