@@ -8,7 +8,7 @@ plex_token=$(printenv PLEX_TOKEN | tr -d '"' | tr -d "'")
 
 getSections() {
     if [[ -z "${plex_url}" ]]; then
-        log "ERROR" "Fill in plex url and plex token to retrieve sections. Aborting..."
+        error "Fill in plex url and plex token to retrieve sections. Aborting..."
         exit 03
     fi
 
@@ -25,7 +25,7 @@ emptyTrash() {
     . "check"
 
     if [[ "$all_good" -eq "1" ]]; then
-        log "NOTICE" "Library refreshing"
+        info "Library refreshing"
         curl -s -G -L "${plex_url}/library/sections/all/refresh?X-Plex-Token=${plex_token}"
         while true; do
             sleep 10
@@ -33,25 +33,25 @@ emptyTrash() {
                 break
             fi
         done
-        log "NOTICE" "Library refresh completed"
+        info "Library refresh completed"
 
         sections=$(getSections)
         if [[ -z "${sections}" ]]; then
-            log "ERROR" "Could not get sections from '${plex_url}' with the inserted token. Aborting..."
+            error "Could not get sections from '${plex_url}' with the inserted token. Aborting..."
             exit 03
         fi
 
         for i in ${sections}
         do
             if [[ ! -z "${i}" ]]; then
-                log "NOTICE" "Empty trash for section '${i}'"
+                info "Empty trash for section '${i}'"
                 curl -s -X PUT -L "${plex_url}/library/sections/${i}/emptyTrash?X-Plex-Token=${plex_token}"
             fi
         done
 
         exit 0
     else
-        log "ERROR" "Mount checks failed. Aborting..."
+        error "Mount checks failed. Aborting..."
         exit 03
     fi
 }

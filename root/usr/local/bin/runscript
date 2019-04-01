@@ -2,20 +2,15 @@
 . "util"
 
 if [[ -z "${1}" ]]; then
-    log "ERROR" "Script name required when calling $(basename "$0")"
+    error "Script name required when calling $(basename "$0")"
     exit 3
-fi
-
-runas=${2}
-if [[ -z "${2}" ]]; then
-    runas="root"
 fi
 
 # If script is already running; abort.
 if [[ $(pidof -o %PPID -x "${1}.script") ]]; then
-    log "DEBUG" "/usr/local/bin/${1}.script already running. Aborting."
+    info "/usr/local/bin/${1}.script already running. Aborting."
     exit 3
 else
-    log "DEBUG" "Starting /usr/local/bin/${1}.script"
+    info "Starting /usr/local/bin/${1}.script"
 fi
-${1}.script > /proc/1/fd/1 2> /proc/1/fd/2
+${1}.script

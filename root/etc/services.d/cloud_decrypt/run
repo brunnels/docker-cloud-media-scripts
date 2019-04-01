@@ -1,25 +1,25 @@
 #!/usr/bin/with-contenv bash
 . "/usr/local/bin/util"
 /bin/s6-svwait -U /var/run/s6/services/read_decrypt
-log "INFO" "Starting cloud_decrypt"
+info "Starting cloud_decrypt"
 
 term_handler() {
-    log "NOTICE" "cloud_decrypt SIGTERM received"
-    log "NOTICE" "cloud_decrypt unmounting ${cloud_decrypt_dir}"
+    info "cloud_decrypt SIGTERM received"
+    info "cloud_decrypt unmounting ${cloud_decrypt_dir}"
     s6-svc -t /var/run/s6/services/local_media
     rclone_unmount ${cloud_decrypt_dir}
-    log "NOTICE" "cloud_decrypt sending SIGTERM to child pid"
+    info "cloud_decrypt sending SIGTERM to child pid"
     s6-svc -t /var/run/s6/services/read_decrypt
     kill -SIGTERM ${PID} >/dev/null 2>&1
-    log "NOTICE" "cloud_decrypt exiting"
+    info "cloud_decrypt exiting"
     exit $?
 }
 
 precache() {
     if ([[ "$(printenv RCLONE_PRECACHE)" == "1" ]]); then
-        log "NOTICE" "Starting VFS pre-cache"
+        info "Starting VFS pre-cache"
         rclone rc vfs/refresh recursive=true > /dev/null 2>&1
-        log "NOTICE" "VFS pre-cache complete"
+        info "VFS pre-cache complete"
     fi
 }
 
@@ -33,7 +33,7 @@ if [[ ! -d "${cloud_decrypt_dir}" ]]; then
 fi
 
 if [[ -z "$(ls -A ${cloud_decrypt_dir})" ]]; then
-    log "NOTICE" "Mounting cloud_decrypt Google Drive: ${cloud_decrypt_dir}"
+    info "Mounting cloud_decrypt Google Drive: ${cloud_decrypt_dir}"
     exec rclone mount ${rclone_mount_options} "${cloud_decrypt_endpoint}" "${cloud_decrypt_dir}"&
     PID=${!}
     sleep 1
@@ -41,13 +41,13 @@ if [[ -z "$(ls -A ${cloud_decrypt_dir})" ]]; then
     fdmove -c 2 1 fdmove 1 3 echo >> /dev/null fdmove -c 1 2
     wait ${PID}
 else
-    log "WARN" "Google Drive cloud_decrypt mountpoint: ${cloud_decrypt_dir} already mounted."
+    warn "Google Drive cloud_decrypt mountpoint: ${cloud_decrypt_dir} already mounted."
 fi
 
-log "ERROR" "cloud_decrypt script crashed"
-log "NOTICE" "cloud_decrypt unmounting ${read_decrypt_dir}"
+error "cloud_decrypt script crashed"
+info "cloud_decrypt unmounting ${read_decrypt_dir}"
 s6-svc -t /var/run/s6/services/local_media
 rclone_unmount ${cloud_decrypt_dir}
 s6-svc -t /var/run/s6/services/read_decrypt
-log "NOTICE" "cloud_decrypt exiting"
+info "cloud_decrypt exiting"
 exit $?

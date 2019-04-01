@@ -5,16 +5,16 @@ ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 if [[ "$(getent group ${PGID} | grep -v "grep" | wc -l)" -eq "0" ]]; then
     if [[ "$(getent group ${USER_NAME} | cut -d: -f1 | wc -l)" -eq "1" ]]; then
-        log "NOTICE" "creating group ${USER_NAME}_${PGID} with GID ${PGID}"
+        info "creating group ${USER_NAME}_${PGID} with GID ${PGID}"
         groupadd -g ${PGID} "${USER_NAME}_${PGID}"
     else
-        log "NOTICE" "creating group ${USER_NAME} with GID ${PGID}"
+        info "creating group ${USER_NAME} with GID ${PGID}"
         groupadd -g ${PGID} ${USER_NAME}
     fi
 fi
 
 if [[ "$(getent passwd ${USER_NAME} | wc -l)" -eq "0" ]]; then
-    log "NOTICE" "creating user ${USER_NAME}"
+    info "creating user ${USER_NAME}"
     sed -i 's/^CREATE_MAIL_SPOOL=yes/CREATE_MAIL_SPOOL=no/' /etc/default/useradd
     groupadd -g ${PGID} ${USER_NAME}
     useradd -l -m -d /home/${USER_NAME} -s /bin/bash -u ${PUID} -g ${PGID} ${USER_NAME}

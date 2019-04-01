@@ -32,12 +32,12 @@ while read -r n; do
     while [[ "$(lsof "$n" > /dev/null 2>&1)" ]] \
  || [[ "$(lsof "${local_decrypt_dir}/${n}" > /dev/null 2>&1)" ]] \
  || [[ "$(lsof "${local_media_dir}/${n}" > /dev/null 2>&1)" ]]; do
-        log "WARN" "File '${n}' in use. Retrying in 10 seconds."
+        warn "File '${n}' in use. Retrying in 10 seconds."
         sleep 10
     done
 
     # Copy file to remote destination[s], retaining path
-    log "NOTICE" "Uploading File: '${local_decrypt_dir}${filename}' to: '${cloud_decrypt_endpoint}${destpath}'"
+    info "Uploading File: '${local_decrypt_dir}${filename}' to: '${cloud_decrypt_endpoint}${destpath}'"
 
     rclone copy ${rclone_options} "$n" "${cloud_decrypt_endpoint}${destpath}" > /dev/null 2>&1
 
@@ -50,15 +50,15 @@ while read -r n; do
         if [[ "${diffSize}" -gt "1000000000" ]]; then
             # greater than 1 GB
             oldSize=${newSize}
-            log "NOTICE" "$((sizeInMb / 1000)) GB uploaded"
+            info "$((sizeInMb / 1000)) GB uploaded"
         fi
     elif [[ "${diffSize}" -gt "100000000" ]]; then
         # greater than 100 MB
         oldSize=${newSize}
-        log "NOTICE" "${sizeInMb} MB uploaded"
+        info "${sizeInMb} MB uploaded"
     fi
 done
 
-log "NOTICE" "Cloud upload complete"
+info "Cloud upload complete"
 
 exit 0
