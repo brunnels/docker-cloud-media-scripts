@@ -36,10 +36,10 @@ if [[ $(mergerfs_pid | wc -l) == "0" ]]; then
         sleep .6
     done
 else
-    warn "local_media mountpoint: ${local_media_dir} already mounted."
+    error "local_media mountpoint: ${local_media_dir} already mounted."
 fi
 
-error "local_media script crashed"
+error "local_media script error"
 info "local_media unmounting ${local_media_dir}"
 rclone_unmount ${local_media_dir}
 s6-svc -t /var/run/s6/services/cloud_decrypt

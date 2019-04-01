@@ -19,16 +19,16 @@ trap term_handler SIGTERM
 
 if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
     info "Mounting read_decrypt Google Drive: ${read_decrypt_dir}"
-    exec rclone mount ${read_decrypt_mount_options} "$@" "${read_decrypt_endpoint}" "${read_decrypt_dir}" &
+    exec rclone mount ${read_decrypt_mount_options} "${read_decrypt_endpoint}" "${read_decrypt_dir}" &
     PID=${!}
     sleep 1
     fdmove -c 2 1 fdmove 1 3 echo >> /dev/null fdmove -c 1 2
     wait ${PID}
 else
-    warn "Google Drive read_decrypt mountpoint: ${read_decrypt_dir} already mounted."
+    error "Google Drive read_decrypt mountpoint: ${read_decrypt_dir} already mounted."
 fi
 
-error "read_decrypt script crashed"
+error "read_decrypt script error"
 info "read_decrypt unmounting ${read_decrypt_dir}"
 s6-svc -t /var/run/s6/services/local_media
 s6-svc -t /var/run/s6/services/cloud_decrypt

@@ -34,10 +34,10 @@ if [[ -z "$(ls -A ${cloud_decrypt_dir})" ]]; then
     fdmove -c 2 1 fdmove 1 3 echo >> /dev/null fdmove -c 1 2
     wait ${PID}
 else
-    warn "Google Drive cloud_decrypt mountpoint: ${cloud_decrypt_dir} already mounted."
+    error "Google Drive cloud_decrypt mountpoint: ${cloud_decrypt_dir} already mounted."
 fi
 
-error "cloud_decrypt script crashed"
+error "cloud_decrypt script error"
 info "cloud_decrypt unmounting ${read_decrypt_dir}"
 s6-svc -t /var/run/s6/services/local_media
 rclone_unmount ${cloud_decrypt_dir}
