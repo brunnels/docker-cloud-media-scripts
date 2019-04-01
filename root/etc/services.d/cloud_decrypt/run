@@ -25,13 +25,6 @@ precache() {
 
 trap term_handler SIGTERM
 
-check_cloud_decrypt
-
-if [[ ! -d "${cloud_decrypt_dir}" ]]; then
-    mkdir -p "${cloud_decrypt_dir}"
-    chown ${PUID}:${PGID} ${cloud_decrypt_dir}
-fi
-
 if [[ -z "$(ls -A ${cloud_decrypt_dir})" ]]; then
     info "Mounting cloud_decrypt Google Drive: ${cloud_decrypt_dir}"
     exec rclone mount ${rclone_mount_options} "${cloud_decrypt_endpoint}" "${cloud_decrypt_dir}"&

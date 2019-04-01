@@ -3,8 +3,8 @@
 
 all_good=1
 
+check_read_decrypt
 check_cloud_decrypt
-check_rclone_cloud
 
 if [[ $(ps -ef | grep "rclone" | grep -v "grep" | wc -l) == "0" ]]; then
     error "rclone is not running"
@@ -21,7 +21,7 @@ if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
     exit 0
 fi
 
-if [[ $(getfattr -d "${local_media_dir}/.mergerfs" 2>/dev/null | grep "user.mergerfs.pid" | awk '{print $2}' FS='"' | wc -l) == "0" ]]; then
+if [[ $(mergerfs_pid | wc -l) == "0" ]]; then
     error "MergerFS is not running"
     all_good=0
 fi

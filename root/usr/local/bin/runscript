@@ -3,13 +3,13 @@
 
 if [[ -z "${1}" ]]; then
     error "Script name required when calling $(basename "$0")"
-    exit 3
+    exit 1
 fi
 
 # If script is already running; abort.
 if [[ $(pidof -o %PPID -x "${1}.script") ]]; then
     info "/usr/local/bin/${1}.script already running. Aborting."
-    exit 3
+    exit 1
 else
     info "Starting /usr/local/bin/${1}.script"
 fi

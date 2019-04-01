@@ -1,8 +1,6 @@
 #!/usr/bin/with-contenv bash
 . "/usr/local/bin/util"
 
-ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
 if [[ "$(getent group ${PGID} | grep -v "grep" | wc -l)" -eq "0" ]]; then
     if [[ "$(getent group ${USER_NAME} | cut -d: -f1 | wc -l)" -eq "1" ]]; then
         info "creating group ${USER_NAME}_${PGID} with GID ${PGID}"
@@ -35,32 +33,3 @@ echo "
 User '${USER_NAME}' GID/UID:  $(id -u ${USER_NAME})/$(id -g ${USER_NAME})
 ---------------------------------------
 "
-#if [[ -d "${secrets_dir}" ]]; then
-#    cp ${secrets_dir}/* /config/
-#fi
-
-if [[ ! -d "${local_decrypt_dir}" ]]; then
-    mkdir -p "${local_decrypt_dir}"
-    chown ${PUID}:${PGID} ${local_decrypt_dir}
-fi
-
-if [[ ! -d "${read_decrypt_dir}" ]]; then
-    mkdir -p "${read_decrypt_dir}"
-    chown ${PUID}:${PGID} ${read_decrypt_dir}
-fi
-
-if [[ ! -d "${cloud_decrypt_dir}" ]]; then
-    mkdir -p "${cloud_decrypt_dir}"
-    chown ${PUID}:${PGID} ${cloud_decrypt_dir}
-fi
-
-if [[ ! -d "${local_media_dir}" ]]; then
-    mkdir -p "${local_media_dir}"
-    chown ${PUID}:${PGID} ${local_media_dir}
-fi
-
-chmod -R 777 \
- /var/lock
-
-chown -R $(printenv USER_NAME):$(printenv USER_NAME) \
- /usr/local/bin/*

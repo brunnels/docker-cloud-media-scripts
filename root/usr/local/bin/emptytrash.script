@@ -9,7 +9,7 @@ plex_token=$(printenv PLEX_TOKEN | tr -d '"' | tr -d "'")
 getSections() {
     if [[ -z "${plex_url}" ]]; then
         error "Fill in plex url and plex token to retrieve sections. Aborting..."
-        exit 03
+        exit 1
     fi
 
     sections=$(curl -s -G -L "${plex_url}/library/sections?X-Plex-Token=${plex_token}" | sed -n 's/.*key="\([^"]*\).*/\1/p')
@@ -21,39 +21,30 @@ isRefreshing() {
     echo ${refreshing}
 }
 
-emptyTrash() {
-    . "check"
-
-    if [[ "$all_good" -eq "1" ]]; then
-        info "Library refreshing"
-        curl -s -G -L "${plex_url}/library/sections/all/refresh?X-Plex-Token=${plex_token}"
-        while true; do
-            sleep 10
-            if [[ -z $(isRefreshing) ]]; then
-                break
-            fi
-        done
-        info "Library refresh completed"
-
-        sections=$(getSections)
-        if [[ -z "${sections}" ]]; then
-            error "Could not get sections from '${plex_url}' with the inserted token. Aborting..."
-            exit 03
-        fi
-
-        for i in ${sections}
-        do
-            if [[ ! -z "${i}" ]]; then
-                info "Empty trash for section '${i}'"
-                curl -s -X PUT -L "${plex_url}/library/sections/${i}/emptyTrash?X-Plex-Token=${plex_token}"
-            fi
-        done
-
-        exit 0
-    else
-        error "Mount checks failed. Aborting..."
-        exit 03
+info "Plex library refreshing"
+curl -s -G -L "${plex_url}/library/sections/all/refresh?X-Plex-Token=${plex_token}"
+while true; do
+    sleep 10
+    if [[ -z $(isRefreshing) ]]; then
+        break
     fi
-}
+done
+info "Plex library refresh completed"
 
-emptyTrash
+sections=$(getSections)
+if [[ -z "${sections}" ]]; then
+    error "Could not get sections from '${plex_url}' with the inserted token. Aborting..."
+    exit 1
+fi
+
+for i in ${sections}
+do
+    if [[ ! -z "${i}" ]]; then
+        info "Empty trash for section '${i}'"
+        curl -s -X PUT -L "${plex_url}/library/sections/${i}/emptyTrash?X-Plex-Token=${plex_token}"
+    fi
+done
+
+info "emptytrash complete"
+
+exit 0

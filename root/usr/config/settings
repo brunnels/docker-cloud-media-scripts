@@ -6,7 +6,7 @@ UMASK=${UMASK:-000}
 USER_NAME=${USER_NAME:-nobody}
 
 config_dir="/config"
-secrets_dir="/secrets"
+#secrets_dir="/secrets"
 # gcloud mount point
 cloud_decrypt_dir="/cloud-decrypt"
 # readonly vfs mount point for cache
@@ -16,12 +16,8 @@ local_decrypt_dir="/local-decrypt"
 # mergerfs mount point
 local_media_dir="/local-media"
 
-rclone_exclude_file="/${config_dir}/exclude.txt"
-if [[ ! -f "${rclone_exclude_file}" ]]; then
-    touch ${rclone_exclude_file}
-fi
-
-rclone_config="--config=/${config_dir}/rclone.conf"
+rclone_exclude_file="${config_dir}/exclude.txt"
+rclone_config="--config=${config_dir}/rclone.conf"
 rclone_options="${rclone_config} --buffer-size $(printenv COPY_BUFFER_SIZE) --checkers $(printenv COPY_CHECKERS)"
 rclone_mount_options="${rclone_options} --allow-non-empty --allow-other --uid $(printenv PUID) --gid $(printenv PGID) --umask $(printenv UMASK)"
 

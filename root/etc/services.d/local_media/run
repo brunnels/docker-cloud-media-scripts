@@ -19,26 +19,16 @@ term_handler() {
 
 trap term_handler SIGTERM
 
-if [[ ! -d "${local_media_dir}" ]]; then
-    mkdir -p "${local_media_dir}"
-    chown ${PUID}:${PGID} ${local_media_dir}
-fi
-
-if [[ ! -d "${local_decrypt_dir}" ]]; then
-    mkdir -p "${local_decrypt_dir}"
-    chown ${PUID}:${PGID} ${local_decrypt_dir}
-fi
-
-if [[ $(getfattr -d "${local_media_dir}/.mergerfs" 2>/dev/null | grep "user.mergerfs.pid" | awk '{print $2}' FS='"' | wc -l) == "0" ]]; then
+if [[ $(mergerfs_pid | wc -l) == "0" ]]; then
     mfs_mounts="${local_decrypt_dir}:${read_decrypt_dir}:${cloud_decrypt_dir}"
     info "Mounting local_media: ${local_media_dir}"
     mergerfs ${mfs_options} "${mfs_mounts}" "${local_media_dir}"
-    while [[ $(getfattr -d "${local_media_dir}/.mergerfs" 2>/dev/null | grep "user.mergerfs.pid" | awk '{print $2}' FS='"' | wc -l) == "0" ]]
+    while [[ $(mergerfs_pid | wc -l) == "0" ]]
     do
         warn "Waiting for mount ${local_media_dir} ..."
         sleep 2
     done
-    PID=$(getfattr -d "${local_media_dir}/.mergerfs" 2>/dev/null | grep "user.mergerfs.pid" | awk '{print $2}' FS='"')
+    PID=$(mergerfs_pid)
     sleep 1
     fdmove -c 2 1 fdmove 1 3 echo >> /dev/null fdmove -c 1 2
     while [[ -e /proc/${PID} ]]

@@ -1,6 +1,7 @@
 #!/bin/bash
-
 . "util"
+
+check_running
 
 oldSize=0
 newSize=0
@@ -114,11 +115,6 @@ rm_space() {
     find "${local_decrypt_dir}" -mindepth $(printenv REMOVE_EMPTY_DIR_DEPTH) -type d -empty -delete
 }
 
-check_running
-check_rclone_cloud
-
-
-
 if [[ "$(printenv REMOVE_LOCAL_FILES_BASED_ON)" = "space" ]]; then
     rm_space
 elif [[ "$(printenv REMOVE_LOCAL_FILES_BASED_ON)" = "time" ]]; then
@@ -127,5 +123,8 @@ elif [[ "$(printenv REMOVE_LOCAL_FILES_BASED_ON)" = "instant" ]]; then
     rm_instant
 else
     debug "no option to remove old files"
-    exit 02
 fi
+
+info "rmlocal complete"
+
+exit 0

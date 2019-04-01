@@ -17,13 +17,6 @@ term_handler() {
 
 trap term_handler SIGTERM
 
-check_read_decrypt
-
-if [[ ! -d "${read_decrypt_dir}" ]]; then
-    mkdir -p "${read_decrypt_dir}"
-    chown ${PUID}:${PGID} ${read_decrypt_dir}
-fi
-
 if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
     info "Mounting read_decrypt Google Drive: ${read_decrypt_dir}"
     exec rclone mount ${read_decrypt_mount_options} "$@" "${read_decrypt_endpoint}" "${read_decrypt_dir}" &

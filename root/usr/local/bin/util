@@ -4,12 +4,12 @@
 log() {
     if [[ -z "${1}" ]]; then
         error "log level required"
-        exit 3
+        exit 1
     fi
 
     if [[ -z "${2}" ]]; then
         error "log message required"
-        exit 3
+        exit 1
     fi
 
     if [[ "$(printenv DEBUG_ENABLED)" == "1" ]] || [[ ${1} != "DEBUG" ]]; then
@@ -36,7 +36,7 @@ error() {
 rclone_unmount() {
     if [[ -z "${1}" ]]; then
         error "unmount path required"
-        exit 3
+        exit 1
     fi
 
     fusermount -u -z "${1}"
@@ -46,6 +46,19 @@ rclone_unmount() {
         warn "Waiting for unmount of ${1} ..."
         sleep 1
     done
+}
+
+mergerfs_pid() {
+    echo $(getfattr -d "${local_media_dir}/.mergerfs" 2>/dev/null | grep "user.mergerfs.pid" | awk '{print $2}' FS='"')
+}
+
+check_ready() {
+    . "check"
+
+    if [[ "$all_good" -ne "1" ]]; then
+        error "Mount checks failed. Aborting..."
+        exit 1
+    fi
 }
 
 check_read_decrypt() {
