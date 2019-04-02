@@ -3,34 +3,6 @@
 
 info "Starting read_decrypt"
 
-term_handler() {
-    info "read_decrypt SIGTERM received"
-    s6-svc -t /var/run/s6/services/local_media
-    s6-svc -t /var/run/s6/services/cloud_decrypt
-    unmount
-    info "read_decrypt sending SIGTERM to child pid"
-    kill -SIGTERM ${PID} >/dev/null 2>&1
-    info "read_decrypt exiting"
-    exit $?
-}
-
-quit_handler() {
-    info "read_decrypt SIGQUIT received"
-    unmount
-    info "read_decrypt sending SIGTERM to child pid"
-    kill -SIGTERM ${PID} >/dev/null 2>&1
-    info "read_decrypt exiting"
-    exit $?
-}
-
-unmount() {
-    info "read_decrypt unmounting ${read_decrypt_dir}"
-    rclone_unmount ${read_decrypt_dir}
-}
-
-trap term_handler SIGTERM
-trap quit_handler SIGQUIT
-
 if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
     info "Mounting read_decrypt Google Drive: ${read_decrypt_dir}"
     exec rclone mount ${read_decrypt_mount_options} "${read_decrypt_endpoint}" "${read_decrypt_dir}" &
@@ -42,9 +14,4 @@ else
     error "Google Drive read_decrypt mountpoint: ${read_decrypt_dir} already mounted."
 fi
 
-error "read_decrypt script error"
-s6-svc -t /var/run/s6/services/local_media
-s6-svc -t /var/run/s6/services/cloud_decrypt
-unmount
-info "read_decrypt exiting"
 exit $?

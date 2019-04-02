@@ -1,43 +1,18 @@
 #!/usr/bin/with-contenv bash
 . "/usr/local/bin/util"
-/bin/s6-svwait -U /var/run/s6/services/read_decrypt
+/bin/s6-svwait -U /var/run/s6/services/read_decrypt >/dev/null 2>&1
 info "Starting cloud_decrypt"
 
-term_handler() {
-    info "cloud_decrypt SIGTERM received"
-    s6-svc -t /var/run/s6/services/local_media
-    unmount
-    info "cloud_decrypt sending SIGTERM to child pid"
-    s6-svc -t /var/run/s6/services/read_decrypt
-    kill -SIGTERM ${PID} >/dev/null 2>&1
-    info "cloud_decrypt exiting"
-    exit $?
-}
-
-quit_handler() {
-    info "cloud_decrypt SIGQUIT received"
-    unmount
-    info "cloud_decrypt sending SIGTERM to child pid"
-    kill -SIGTERM ${PID} >/dev/null 2>&1
-    info "cloud_decrypt exiting"
-    exit $?
-}
-
-unmount() {
-    info "cloud_decrypt unmounting ${cloud_decrypt_dir}"
-    rclone_unmount ${cloud_decrypt_dir}
-}
+precache_complete=0
 
 precache() {
-    if ([[ "$(printenv RCLONE_PRECACHE)" == "1" ]]); then
+    if [[ "$(printenv RCLONE_PRECACHE)" -eq "1" ]] && [[ "${precache_complete}" -eq "0" ]]; then
         info "Starting VFS pre-cache"
         rclone rc vfs/refresh recursive=true > /dev/null 2>&1
         info "VFS pre-cache complete"
     fi
+    precache_complete=1
 }
-
-trap term_handler SIGTERM
-trap quit_handler SIGQUIT
 
 if [[ -z "$(ls -A ${cloud_decrypt_dir})" ]]; then
     info "Mounting cloud_decrypt Google Drive: ${cloud_decrypt_dir}"
@@ -51,9 +26,4 @@ else
     error "Google Drive cloud_decrypt mountpoint: ${cloud_decrypt_dir} already mounted."
 fi
 
-error "cloud_decrypt script error"
-s6-svc -t /var/run/s6/services/local_media
-unmount
-s6-svc -t /var/run/s6/services/read_decrypt
-info "cloud_decrypt exiting"
 exit $?

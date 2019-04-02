@@ -1,0 +1,9 @@
+#!/usr/bin/with-contenv bash
+. "/usr/local/bin/util"
+
+s6-svc -r -wD /var/run/s6/services/local_media >/dev/null 2>&1
+s6-svc -r -wD /var/run/s6/services/cloud_decrypt >/dev/null 2>&1
+
+info "read_decrypt stopping"
+info "read_decrypt unmounting ${read_decrypt_dir}"
+rclone_unmount ${read_decrypt_dir}

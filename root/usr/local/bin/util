@@ -39,7 +39,7 @@ rclone_unmount() {
         exit 1
     fi
 
-    fusermount -u -z "${1}"
+    fusermount -u -z "${1}" >/dev/null 2>&1
 
     while [[ "$(ls -A ${1})" ]]
     do

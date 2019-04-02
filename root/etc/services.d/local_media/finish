@@ -1,0 +1,6 @@
+#!/usr/bin/with-contenv bash
+. "/usr/local/bin/util"
+
+info "local_media stopping"
+info "local_media unmounting ${local_media_dir}"
+rclone_unmount ${local_media_dir}
