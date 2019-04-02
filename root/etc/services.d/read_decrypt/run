@@ -7,15 +7,29 @@ term_handler() {
     info "read_decrypt SIGTERM received"
     s6-svc -t /var/run/s6/services/local_media
     s6-svc -t /var/run/s6/services/cloud_decrypt
-    info "read_decrypt unmounting ${read_decrypt_dir}"
-    rclone_unmount ${read_decrypt_dir}
+    unmount
     info "read_decrypt sending SIGTERM to child pid"
     kill -SIGTERM ${PID} >/dev/null 2>&1
     info "read_decrypt exiting"
     exit $?
 }
 
+quit_handler() {
+    info "read_decrypt SIGQUIT received"
+    unmount
+    info "read_decrypt sending SIGTERM to child pid"
+    kill -SIGTERM ${PID} >/dev/null 2>&1
+    info "read_decrypt exiting"
+    exit $?
+}
+
+unmount() {
+    info "read_decrypt unmounting ${read_decrypt_dir}"
+    rclone_unmount ${read_decrypt_dir}
+}
+
 trap term_handler SIGTERM
+trap quit_handler SIGQUIT
 
 if [[ -z "$(ls -A ${read_decrypt_dir})" ]]; then
     info "Mounting read_decrypt Google Drive: ${read_decrypt_dir}"
@@ -29,9 +43,8 @@ else
 fi
 
 error "read_decrypt script error"
-info "read_decrypt unmounting ${read_decrypt_dir}"
 s6-svc -t /var/run/s6/services/local_media
 s6-svc -t /var/run/s6/services/cloud_decrypt
-rclone_unmount ${read_decrypt_dir}
+unmount
 info "read_decrypt exiting"
 exit $?

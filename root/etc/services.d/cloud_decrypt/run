@@ -5,14 +5,27 @@ info "Starting cloud_decrypt"
 
 term_handler() {
     info "cloud_decrypt SIGTERM received"
-    info "cloud_decrypt unmounting ${cloud_decrypt_dir}"
     s6-svc -t /var/run/s6/services/local_media
-    rclone_unmount ${cloud_decrypt_dir}
+    unmount
     info "cloud_decrypt sending SIGTERM to child pid"
     s6-svc -t /var/run/s6/services/read_decrypt
     kill -SIGTERM ${PID} >/dev/null 2>&1
     info "cloud_decrypt exiting"
     exit $?
+}
+
+quit_handler() {
+    info "cloud_decrypt SIGQUIT received"
+    unmount
+    info "cloud_decrypt sending SIGTERM to child pid"
+    kill -SIGTERM ${PID} >/dev/null 2>&1
+    info "cloud_decrypt exiting"
+    exit $?
+}
+
+unmount() {
+    info "cloud_decrypt unmounting ${cloud_decrypt_dir}"
+    rclone_unmount ${cloud_decrypt_dir}
 }
 
 precache() {
@@ -24,6 +37,7 @@ precache() {
 }
 
 trap term_handler SIGTERM
+trap quit_handler SIGQUIT
 
 if [[ -z "$(ls -A ${cloud_decrypt_dir})" ]]; then
     info "Mounting cloud_decrypt Google Drive: ${cloud_decrypt_dir}"
@@ -38,9 +52,8 @@ else
 fi
 
 error "cloud_decrypt script error"
-info "cloud_decrypt unmounting ${read_decrypt_dir}"
 s6-svc -t /var/run/s6/services/local_media
-rclone_unmount ${cloud_decrypt_dir}
+unmount
 s6-svc -t /var/run/s6/services/read_decrypt
 info "cloud_decrypt exiting"
 exit $?

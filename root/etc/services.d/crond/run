@@ -4,4 +4,31 @@
 /bin/s6-svwait -U /var/run/s6/services/cloud_decrypt
 /bin/s6-svwait -U /var/run/s6/services/local_media
 info "Starting crond"
-crond -f >/dev/null 2>&1
+
+term_handler() {
+  info "cron SIGTERM received, shutting down container"
+  kill -SIGTERM ${PID} >/dev/null 2>&1
+  info "crond exiting"
+  s6-svc -q -d -wd /var/run/s6/services/local_media
+  s6-svc -q -d -wd /var/run/s6/services/cloud_decrypt
+  s6-svc -q -d -wd /var/run/s6/services/read_decrypt
+  s6-svscanctl -t /var/run/s6/services
+  exit $?
+}
+
+trap term_handler SIGTERM SIGKILL
+
+crond -f >/dev/null 2>&1 &
+PID=${!}
+sleep 1
+info "Service startup completed"
+fdmove -c 2 1 fdmove 1 3 echo >> /dev/null fdmove -c 1 2
+wait ${PID}
+
+error "crond script error, shutting down container"
+info "crond exiting"
+s6-svc -q -d -wd /var/run/s6/services/local_media
+s6-svc -q -d -wd /var/run/s6/services/cloud_decrypt
+s6-svc -q -d -wd /var/run/s6/services/read_decrypt
+s6-svscanctl -t /var/run/s6/services
+exit $?

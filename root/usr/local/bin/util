@@ -49,7 +49,10 @@ rclone_unmount() {
 }
 
 mergerfs_pid() {
-    echo $(getfattr -d "${local_media_dir}/.mergerfs" 2>/dev/null | grep "user.mergerfs.pid" | awk '{print $2}' FS='"')
+    local pid=$(getfattr -d "${local_media_dir}/.mergerfs" 2>/dev/null | grep "user.mergerfs.pid" | awk '{print $2}' FS='"')
+    if [[ -n ${pid} ]]; then
+        echo ${pid}
+    fi
 }
 
 check_ready() {
